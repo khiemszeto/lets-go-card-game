@@ -1,4 +1,4 @@
-package com.gameplatform;
+package com.gameplatform.game;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -10,7 +10,7 @@ public class Deck {
     public int remainingStart = 0;
     public int dealSize = 13;
 
-    Deck() {
+    public Deck() {
         for (Suit suit : Suit.values()) {
             for (Rank rank : Rank.values()) {
                 cards.add(new Card(suit, rank));

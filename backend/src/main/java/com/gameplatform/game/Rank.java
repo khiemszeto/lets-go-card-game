@@ -1,4 +1,4 @@
-package com.gameplatform;
+package com.gameplatform.game;
 
 public enum Rank {
     THREE,
