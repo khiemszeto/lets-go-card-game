@@ -16,7 +16,6 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<String> handleGenericException(Exception e) {
         return ResponseEntity.
@@ -32,7 +31,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ExceptionDTO> handleResourceNotFoundException(ResourceNotFoundException e, HttpServletRequest request) {
+    public ResponseEntity<ExceptionDTO> handleResourceNotFoundException(
+            ResourceNotFoundException e, HttpServletRequest request) {
 
         ExceptionDTO exceptionDTO = new ExceptionDTO(
                 LocalDateTime.now(),
@@ -41,7 +41,6 @@ public class GlobalExceptionHandler {
                 e.getMessage(),
                 request.getRequestURI()
         );
-
 
         return ResponseEntity.
                 status(404)
@@ -59,7 +58,6 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
 
-
         return ResponseEntity.
                 status(409)
                 .body(exceptionDTO);
@@ -68,6 +66,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ValidationExceptionResponseDTO> handleMethodArgumentNotValidException(
             MethodArgumentNotValidException e, HttpServletRequest request) {
+
         Map<String, String> fieldErrors = new HashMap<>();
 
         e.getBindingResult()
@@ -83,7 +82,9 @@ public class GlobalExceptionHandler {
                 fieldErrors
         );
 
-        return ResponseEntity.status(400).body(validationExceptionResponseDTO);
+        return ResponseEntity
+                .status(400)
+                .body(validationExceptionResponseDTO);
     }
 
 }

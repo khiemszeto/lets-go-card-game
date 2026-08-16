@@ -11,7 +11,8 @@ public class ValidationExceptionResponseDTO {
     private String path;
     private Map<String, String> fieldErrors;
 
-    public ValidationExceptionResponseDTO(LocalDateTime timestamp, int status, String error, String message, String path, Map<String, String> fieldErrors) {
+    public ValidationExceptionResponseDTO(LocalDateTime timestamp, int status, String error, String message,
+                                          String path, Map<String, String> fieldErrors) {
         this.timestamp = timestamp;
         this.status = status;
         this.error = error;
