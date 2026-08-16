@@ -11,6 +11,17 @@ cd ~/card-game/backend
 ./mvnw spring-boot:run
 ```
 
+For dev purposes, if you are working on the backend, please install mysql 
+and provide the url, username and password 
+in the application-calvin-dev.properties file.
+,then run the backend with
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=calvin-dev
+```
+to enable your local database, the table will be created automatically due to JPA.
+
+
+
 **Terminal 2 — frontend:**
 ```bash
 cd ~/card-game/frontend
