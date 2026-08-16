@@ -1,4 +1,4 @@
-package com.gameplatform;
+package com.gameplatform.controller;
 
 import org.springframework.web.bind.annotation.*;
 import java.util.*;
