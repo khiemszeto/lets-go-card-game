@@ -3,26 +3,37 @@
 
 Daily development loop
 
-Two terminals, both left running.
+Three terminals, all left running.
 
-**Terminal 1 — backend:**
+**Terminal 1 — database:**
+```bash
+cd ~/card-game
+docker compose up -d
+```
+
+MySQL takes a few seconds to accept connections after the container starts.
+`docker compose ps` should say `healthy` before you start the backend.
+
+**Terminal 2 — backend:**
 ```bash
 cd ~/card-game/backend
-./mvnw spring-boot:run
+./mvnw spring-boot:run -Dspring-boot.run.profiles=calvin-dev
 ```
 
-For dev purposes, if you are working on the backend, please install mysql 
-and provide the url, username and password 
-in the application-calvin-dev.properties file.
-,then run the backend with
-```bash
-mvn spring-boot:run -Dspring-boot.run.profiles=calvin-dev
+Use your own `application-<name>-dev.properties` profile. For the Docker setup:
+
+```properties
+spring.datasource.url=jdbc:mysql://localhost:3306/player_db
+spring.datasource.username=root
+spring.datasource.password=
 ```
-to enable your local database, the table will be created automatically due to JPA.
 
+Tables are created automatically due to JPA.
 
+Requires a JDK 25 entry in `~/.m2/toolchains.xml`, otherwise the build fails with
+"Cannot find matching toolchain definitions for jdk [version 25]".
 
-**Terminal 2 — frontend:**
+**Terminal 3 — frontend:**
 ```bash
 cd ~/card-game/frontend
 npm run dev
