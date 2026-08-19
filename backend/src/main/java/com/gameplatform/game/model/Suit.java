@@ -1,4 +1,4 @@
-package com.gameplatform.game;
+package com.gameplatform.game.model;
 
 public enum Suit {
     SPADE,
