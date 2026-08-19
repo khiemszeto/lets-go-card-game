@@ -15,7 +15,7 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
     boolean existsByUsername(String username);
 
-    List<Player> findTop10ByBalance();
+    List<Player> findTop10ByOrderByBalanceDesc();
 
     @Query(value = """
             SELECT *

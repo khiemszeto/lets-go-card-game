@@ -94,7 +94,7 @@ public class PlayerService {
     }
 
     public List<CreatePlayerResponseDto> getTop10Players() {
-        List<Player> top10 = playerRepository.findTop10ByBalance();
+        List<Player> top10 = playerRepository.findTop10ByOrderByBalanceDesc();
 
         return top10.stream().map(this::mapToDTO).toList();
     }
