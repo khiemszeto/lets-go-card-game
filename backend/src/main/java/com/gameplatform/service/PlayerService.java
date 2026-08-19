@@ -1,5 +1,13 @@
 package com.gameplatform.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import com.gameplatform.annotation.TrackExecutionTime;
 import com.gameplatform.dto.CreatePlayerRequestDto;
 import com.gameplatform.dto.CreatePlayerResponseDto;
@@ -7,10 +15,6 @@ import com.gameplatform.entity.Player;
 import com.gameplatform.exception.DuplicateResourceException;
 import com.gameplatform.exception.ResourceNotFoundException;
 import com.gameplatform.repository.PlayerRepository;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 public class PlayerService {
@@ -67,6 +71,15 @@ public class PlayerService {
 
     }
 
+    public List<Player> fetchByPage() {
+        // pagination
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<Player> playerList =  playerRepository.findAll(pageable);
+
+        return playerList.toList();
+    }
+
 
     @TrackExecutionTime(
             operation = "Get A Player By Id",
@@ -78,6 +91,12 @@ public class PlayerService {
         );
 
         return mapToDTO(player);
+    }
+
+    public List<CreatePlayerResponseDto> getTop10Players() {
+        List<Player> top10 = playerRepository.findTop10ByBalance();
+
+        return top10.stream().map(this::mapToDTO).toList();
     }
 
     private CreatePlayerResponseDto mapToDTO(Player playerResponse) {
