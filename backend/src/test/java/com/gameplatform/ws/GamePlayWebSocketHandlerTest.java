@@ -1,9 +1,13 @@
 package com.gameplatform.ws;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
+import org.springframework.web.socket.CloseStatus;
+import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 
 public class GamePlayWebSocketHandlerTest {
@@ -14,18 +18,36 @@ public class GamePlayWebSocketHandlerTest {
 
     @Test
     void connectionSendsWelcomeAndOnlineCount() throws Exception {
+        WebSocketSession session = openSession("s1");
 
+        handler.afterConnectionEstablished(session);
+
+        verify(session).sendMessage(new TextMessage("welcome s1"));
+        verify(session).sendMessage(new TextMessage("online 1"));
     }
 
 
     @Test
     void messageIsBroadcastToEveryConnectedSession() throws Exception {
+        WebSocketSession sender = openSession("s1");
+        WebSocketSession other = openSession("s2");
+        handler.afterConnectionEstablished(sender);
+        handler.afterConnectionEstablished(other);
 
+        handler.handleTextMessage(sender, new TextMessage("hello"));
 
+        verify(sender).sendMessage(new TextMessage("s1: hello"));
+        verify(other).sendMessage(new TextMessage("s1: hello"));
     }
 
     @Test
     void closingRemovesTheSession() throws Exception {
+        WebSocketSession session = openSession("s1");
+        handler.afterConnectionEstablished(session);
+
+        handler.afterConnectionClosed(session, CloseStatus.NORMAL);
+
+        assertThat(sessionRegistry.count()).isZero();
     }
 
     private WebSocketSession openSession(String id) {
