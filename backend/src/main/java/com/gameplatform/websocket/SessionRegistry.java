@@ -1,5 +1,6 @@
-package com.gameplatform.ws;
+package com.gameplatform.websocket;
 
+import com.gameplatform.entity.Player;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -23,12 +24,27 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SessionRegistry {
 
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
+    private final Map<Long, WebSocketSession> sessionPlayers = new ConcurrentHashMap<>();
 
-    public void add(WebSocketSession session) {
+    public void add(WebSocketSession session, Long playerId) throws IOException {
+        // check if player is already connected
+        if (sessionPlayers.containsKey(playerId)) {
+            WebSocketSession oldSession = sessionPlayers.get(playerId);
+            sessions.remove(oldSession.getId());
+            oldSession.close();
+        }
+
         sessions.put(session.getId(), session);
+        sessionPlayers.put(playerId, session);
     }
 
     public void remove(WebSocketSession session) {
+        Long playerId = (Long) session.getAttributes().get("playerId");
+
+        if (playerId != null && session == sessionPlayers.get(playerId)) {
+            sessionPlayers.remove(playerId);
+        }
+
         sessions.remove(session.getId());
     }
 

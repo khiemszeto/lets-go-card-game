@@ -1,4 +1,4 @@
-package com.gameplatform.lobby;
+package com.gameplatform.service;
 
 
 /**

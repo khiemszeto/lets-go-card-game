@@ -1,4 +1,4 @@
-package com.gameplatform.ws;
+package com.gameplatform.websocket;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
