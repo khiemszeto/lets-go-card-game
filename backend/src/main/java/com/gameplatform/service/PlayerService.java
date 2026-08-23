@@ -86,7 +86,7 @@ public class PlayerService {
             warnAfter = 1000L
     )
     public CreatePlayerResponseDto getPlayer(Long id) {
-        Player player = playerRepository.findById(id).orElseThrow(
+        Player player = playerRepository.findByIdAndDeletedIsFalse(id).orElseThrow(
                 () -> new ResourceNotFoundException("Player with id " + id + " not found")
         );
 
