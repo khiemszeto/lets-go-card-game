@@ -33,7 +33,7 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
     private final SessionRegistry sessionRegistry;
 
-    PlayerService playerService;
+    private final PlayerService playerService;
 
     public GamePlayWebSocketHandler(SessionRegistry sessionRegistry,
                                     PlayerService playerService) {
