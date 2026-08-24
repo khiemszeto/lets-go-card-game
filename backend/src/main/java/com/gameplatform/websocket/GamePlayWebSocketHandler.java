@@ -2,7 +2,11 @@ package com.gameplatform.websocket;
 
 import com.gameplatform.dto.CreatePlayerResponseDto;
 import com.gameplatform.exception.ResourceNotFoundException;
+import com.gameplatform.service.LobbyService;
 import com.gameplatform.service.PlayerService;
+import com.gameplatform.websocket.dto.ClientMessageDto;
+import com.gameplatform.websocket.dto.ErrorMessageDto;
+import com.gameplatform.websocket.dto.PongMessageDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -12,9 +16,12 @@ import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import org.springframework.web.util.UriComponentsBuilder;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.UUID;
 
 /**
  * Behavior? during connection
@@ -33,12 +40,21 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
     private final SessionRegistry sessionRegistry;
 
-    private final PlayerService playerService;
+    private PlayerService playerService;
+
+    private ObjectMapper objectMapper;
+
+    private LobbyService lobbyService;
 
     public GamePlayWebSocketHandler(SessionRegistry sessionRegistry,
-                                    PlayerService playerService) {
+                                    PlayerService playerService,
+                                    LobbyService lobbyService,
+                                    ObjectMapper objectMapper
+    ) {
         this.sessionRegistry = sessionRegistry;
         this.playerService = playerService;
+        this.objectMapper = objectMapper;
+        this.lobbyService = lobbyService;
     }
 
 
@@ -90,8 +106,85 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         log.info("WebSocket message from {}: {}", session.getId(), message.getPayload());
+        if (message.getPayload().isBlank()) { return;}
 
-        sessionRegistry.broadcast(session.getId() + ": " + message.getPayload());
+        ClientMessageDto data;
+
+        try {
+            data  = objectMapper.readValue(message.getPayload(), ClientMessageDto.class);
+        }catch (JacksonException e) {
+            ErrorMessageDto errorMessageDto = new ErrorMessageDto();
+            errorMessageDto.setType("ERROR");
+            errorMessageDto.setMessage("Json invalid bro !!");
+            sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
+            return;
+        }
+
+        if (data.getType() == null || data.getType().isBlank()) {
+            ErrorMessageDto errorMessageDto = new ErrorMessageDto();
+            errorMessageDto.setType("ERROR");
+            errorMessageDto.setMessage("Json invalid bro !!");
+            sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
+            return;
+        }
+
+
+        switch (data.getType()) {
+            case "PING" ->  {
+                PongMessageDto pongMessageDto = new PongMessageDto();
+                pongMessageDto.setType("PONG");
+                sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(pongMessageDto)));
+            }
+
+            case "CREATE_ROOM" -> {
+                // server create a new room and send back the room id
+                Long playerId = (Long) session.getAttributes().get("playerId");
+                String username = session.getAttributes().get("username").toString();
+
+                Object messageDto = lobbyService.createRoom(playerId, username);
+
+                sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
+            }
+
+            case "JOIN_ROOM" -> {
+                Long playerId = (Long) session.getAttributes().get("playerId");
+                String username = session.getAttributes().get("username").toString();
+                String roomId = data.getRoomId();
+
+                if (roomId == null || roomId.isBlank()) {
+                    ErrorMessageDto errorMessageDto = new ErrorMessageDto();
+                    errorMessageDto.setType("ERROR");
+                    errorMessageDto.setMessage("Json invalid bro !!");
+                    sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
+                    return;
+                }
+
+                UUID roomUUID;
+
+                try {
+                    roomUUID = UUID.fromString(roomId);
+                } catch (IllegalArgumentException e) {
+                    ErrorMessageDto errorMessageDto = new ErrorMessageDto();
+                    errorMessageDto.setType("ERROR");
+                    errorMessageDto.setMessage("Json invalid bro !!");
+                    sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
+                    return;
+                }
+
+
+                Object messageDto = lobbyService.joinRoom(playerId, username, roomUUID);
+
+                sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
+                sessionRegistry.broadcast(username + " joined room " + roomId);
+            }
+
+            default -> {
+                ErrorMessageDto errorMessageDto = new ErrorMessageDto();
+                errorMessageDto.setType("ERROR");
+                errorMessageDto.setMessage("UNKNOWN TYPE bro !!!");
+                sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
+            }
+        }
     }
 
     // this does not handle the case where laptop lid or a dropped Wi-Fi
