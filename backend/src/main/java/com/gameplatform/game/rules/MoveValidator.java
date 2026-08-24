@@ -26,6 +26,6 @@ public final class MoveValidator {
     }
 
     static int countPairs() {
-
+        return 0;
     }
 }
