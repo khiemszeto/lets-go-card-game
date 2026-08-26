@@ -73,7 +73,7 @@ public final class MoveValidator {
         if (sorted.size() < 3) return false; // must have at least 3 cards
         for (int i = 0; i < sorted.size(); i++) {
             if (sorted.get(i).getRank() == Rank.TWO) return false; // cannot have no 2
-            if (i > 0 && !isOneRankAbove(sorted.get(i - 1), sorted.get(i))) return false; // must be consecutive ranks of cards
+            if (i > 0 && !isOneRankAbove(sorted.get(i), sorted.get(i - 1))) return false; // must be consecutive ranks of cards
         }
         return true;
     }
@@ -87,13 +87,13 @@ public final class MoveValidator {
         for (int i = 0; i < n; i += 2) {
             if (sorted.get(i).getRank() == Rank.TWO) return false; // cannot be no 2
             if (sorted.get(i).getRank() != sorted.get(i + 1).getRank()) return false; // sorted pairs must be same Rank
-            if (i > 0 && !isOneRankAbove(sorted.get(i - 2), sorted.get(i))) return false; // must be consecutive rank of pairs
+            if (i > 0 && !isOneRankAbove(sorted.get(i), sorted.get(i - 2))) return false; // must be consecutive rank of pairs
         }
         return true;
     }
 
     /** check if b is exactly 1 rank above a, rank of a + 1 == b rank*/
-    private static boolean isOneRankAbove(Card lower, Card higher) {
+    private static boolean isOneRankAbove(Card higher, Card lower) {
         return higher.getRank().ordinal() == lower.getRank().ordinal() + 1;
     }
 
