@@ -93,8 +93,8 @@ public final class MoveValidator {
     }
 
     /** check if b is exactly 1 rank above a, rank of a + 1 == b rank*/
-    private static boolean isOneRankAbove(Card a, Card b) {
-        return a.getRank().ordinal() + 1 == b.getRank().ordinal();
+    private static boolean isOneRankAbove(Card lower, Card higher) {
+        return higher.getRank().ordinal() == lower.getRank().ordinal() + 1;
     }
 
     /** rejection messages for invalid Play*/
