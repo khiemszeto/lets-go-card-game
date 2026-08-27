@@ -19,6 +19,21 @@ public final class MoveValidator {
 
     private MoveValidator() {}
 
+    /** the cards must form a legal play AND beat whatever is on the table */
+    public static MoveResult validate(List<Card> cards, Table table) {
+        MoveResult identified = identifyPlay(cards);
+        if (!identified.valid()) return identified; // not even a legal shape, stop here
+
+        // nothing on the table, so any legal shape goes
+        if (table == null || table.isEmpty()) return identified;
+
+        if (!beats(identified.play(), table.standing())) {
+            return MoveResult.invalid("this does not beat the "
+                    + describe(table.standing()) + " on the table");
+        }
+        return identified;
+    }
+
     /** figure out which PlayType does the List<Card> form into */
     public static MoveResult identifyPlay(List<Card> cards) {
         if (cards == null || cards.isEmpty()) {
@@ -97,41 +112,72 @@ public final class MoveValidator {
         return higher.getRank().ordinal() == lower.getRank().ordinal() + 1;
     }
 
-    /** rejection messages for invalid Play*/
-    private static String rejectionReason(int cardCount) {
-        return switch (cardCount) {
-            case 2 -> "pair must be two cars of the same rank (e.g. 10-10)";
-            case 3 -> "three cards should form triple (e.g. 3 Queens), or like 3 ranks in a row (e.g. 3-4-5)";
-            case 4 -> "found cards should be '4 of a kind' (e.g. 4 Kings) or four ranks in a row (e.g. 4-5-6-7)";
-            default -> "cars are not straight? or like cannot contain no 2";
-        };
-    }
-
-
-
     /** check if the new Play candidate beats the Play standing on the table
      * null standing == inital open round
      * */
     public static boolean beats(Play candidate, Play standing) {
-        return true;
+        if (standing == null) return true;
+
+        // the normal rule 1 vs 1 situation, same shape, same length, higher top card
+        if (candidate.type() == standing.type() && candidate.size() == standing.size()) {
+            return candidate.topCard().compareTo(standing.topCard()) > 0;
+        }
+        // not the same shape, so the only way through is a chop
+        return canChop(candidate, standing);
     }
 
 
-    /** if a player's Play can chop the standing Play on the table*/
+    /** check if a player's Play can chop the standing Play on the table
+     *  3 pairs < 4 of a kind < 4 pairs
+     *  to flag a chop when it is happening on the table */
     public static boolean canChop(Play candidate, Play standing) {
-        return true;
-    }
+        if (standing == null) return false;
 
-    private static boolean isPairRun(Play play, int cardCount) {
+        // 3 consecutive pairs chop a single 2
+        if (isPairRun(candidate, THREE_PAIR_RUN_CARDS)) {
+            return isSingle(standing, Rank.TWO);
+        }
+        // 4 of a kind chops a single 2, or 3 consecutive pairs
+        if (candidate.type() == PlayType.FOUR_OF_A_KIND) {
+            return isSingle(standing, Rank.TWO)
+                    || isPairRun(standing, THREE_PAIR_RUN_CARDS);
+        }
+        // 4 consecutive pairs chop a single 2, a pair of 2s, a 4 of a kind, or 3 consecutive pairs
+        if (isPairRun(candidate, FOUR_PAIR_RUN_CARDS)) {
+            return isSingle(standing, Rank.TWO)
+                    || isPair(standing, Rank.TWO)
+                    || standing.type() == PlayType.FOUR_OF_A_KIND
+                    || isPairRun(standing, THREE_PAIR_RUN_CARDS);
+        }
         return false;
     }
 
+    private static boolean isPairRun(Play play, int cardCount) {
+        return play.type() == PlayType.CONSECUTIVE_PAIRS && play.size() == cardCount;
+    }
+
     private static boolean isSingle(Play play, Rank rank) {
-        return true;
+        return play.type() == PlayType.SINGLE && play.topCard().getRank() == rank;
     }
 
 
     private static boolean isPair(Play play, Rank rank) {
-        return true;
+        return play.type() == PlayType.PAIR && play.topCard().getRank() == rank;
+    }
+
+    /** rejection messages for invalid Play*/
+    private static String rejectionReason(int cardCount) {
+        return switch (cardCount) {
+            case 2 -> "pair must be two cards of the same rank (e.g. 10-10)";
+            case 3 -> "three cards should form triple (e.g. 3 Queens), or like 3 ranks in a row (e.g. 3-4-5)";
+            case 4 -> "four cards should be '4 of a kind' (e.g. 4 Kings) or four ranks in a row (e.g. 4-5-6-7)";
+            default -> "cards are not straight? or like cannot contain no 2";
+        };
+    }
+
+    /** turn CONSECUTIVE_PAIRS into "consecutive pairs" for the error message displaying
+     * basically a toString() for PlayType */
+    private static String describe(Play play) {
+        return play.type().toString().toLowerCase().replace('_', ' ');
     }
 }
