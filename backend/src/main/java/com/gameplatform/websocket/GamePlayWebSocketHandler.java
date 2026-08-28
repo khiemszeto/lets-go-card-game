@@ -2,11 +2,15 @@ package com.gameplatform.websocket;
 
 import com.gameplatform.dto.CreatePlayerResponseDto;
 import com.gameplatform.exception.ResourceNotFoundException;
+import com.gameplatform.game.Room;
+import com.gameplatform.service.GameService;
 import com.gameplatform.service.LobbyService;
 import com.gameplatform.service.PlayerService;
-import com.gameplatform.websocket.dto.ClientMessageDto;
-import com.gameplatform.websocket.dto.ErrorMessageDto;
-import com.gameplatform.websocket.dto.PongMessageDto;
+import com.gameplatform.websocket.dto.common.ErrorMessageDto;
+import com.gameplatform.websocket.dto.inbound.ClientMessageDto;
+import com.gameplatform.websocket.dto.outbound.lobby.LeftRoomMessageDto;
+import com.gameplatform.websocket.dto.outbound.lobby.RoomStateMessageDto;
+import com.gameplatform.websocket.dto.outbound.system.PongMessageDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -46,15 +50,23 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
     private LobbyService lobbyService;
 
+    private GameService gameService;
+
+    private RoomNotifier roomNotifier;
+
     public GamePlayWebSocketHandler(SessionRegistry sessionRegistry,
                                     PlayerService playerService,
                                     LobbyService lobbyService,
-                                    ObjectMapper objectMapper
+                                    GameService gameService,
+                                    ObjectMapper objectMapper,
+                                    RoomNotifier roomNotifier
     ) {
         this.sessionRegistry = sessionRegistry;
         this.playerService = playerService;
         this.objectMapper = objectMapper;
         this.lobbyService = lobbyService;
+        this.roomNotifier = roomNotifier;
+        this.gameService = gameService;
     }
 
 
@@ -114,7 +126,6 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
             data  = objectMapper.readValue(message.getPayload(), ClientMessageDto.class);
         }catch (JacksonException e) {
             ErrorMessageDto errorMessageDto = new ErrorMessageDto();
-            errorMessageDto.setType("ERROR");
             errorMessageDto.setMessage("Json invalid bro !!");
             sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
             return;
@@ -122,12 +133,10 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
         if (data.getType() == null || data.getType().isBlank()) {
             ErrorMessageDto errorMessageDto = new ErrorMessageDto();
-            errorMessageDto.setType("ERROR");
             errorMessageDto.setMessage("Json invalid bro !!");
             sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
             return;
         }
-
 
         switch (data.getType()) {
             case "PING" ->  {
@@ -153,7 +162,6 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
                 if (roomId == null || roomId.isBlank()) {
                     ErrorMessageDto errorMessageDto = new ErrorMessageDto();
-                    errorMessageDto.setType("ERROR");
                     errorMessageDto.setMessage("Json invalid bro !!");
                     sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
                     return;
@@ -165,22 +173,118 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
                     roomUUID = UUID.fromString(roomId);
                 } catch (IllegalArgumentException e) {
                     ErrorMessageDto errorMessageDto = new ErrorMessageDto();
-                    errorMessageDto.setType("ERROR");
                     errorMessageDto.setMessage("Json invalid bro !!");
                     sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
                     return;
                 }
 
-
+                // expect RoomStateMessageDt in happy path, BUT ErrorMessageDto in case of error
                 Object messageDto = lobbyService.joinRoom(playerId, username, roomUUID);
+                if (messageDto instanceof RoomStateMessageDto roomStateMessageDto) {
+                    Room room = lobbyService.getRoomByUUID(roomUUID);
+                    roomNotifier.sendToRoom(room, roomStateMessageDto);
+                } else {
+                    sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
+                }
 
-                sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
-                sessionRegistry.broadcast(username + " joined room " + roomId);
             }
+
+            case "READY" -> {
+                // client click ready botton
+                Long playerId = (Long) session.getAttributes().get("playerId");
+
+                // expect RoomStateMessageDt in happy path, BUT ErrorMessageDto in case of error
+                Object messageDto = lobbyService.playerReady(playerId);
+
+                if (messageDto instanceof RoomStateMessageDto roomStateMessageDto) {
+                    String roomId = roomStateMessageDto.getRoomId();
+                    Room room = lobbyService.getRoomByUUID(UUID.fromString(roomId));
+                    roomNotifier.sendToRoom(room, roomStateMessageDto);
+                } else {
+                    sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
+                }
+            }
+
+            case "NOT_READY" -> {
+                Long playerId = (Long) session.getAttributes().get("playerId");
+
+                // expect RoomStateMessageDt in happy path, BUT ErrorMessageDto in case of error
+                Object messageDto =  lobbyService.playerNotReady(playerId);
+
+                if (messageDto instanceof RoomStateMessageDto roomStateMessageDto) {
+                    String roomId = roomStateMessageDto.getRoomId();
+                    Room room = lobbyService.getRoomByUUID(UUID.fromString(roomId));
+                    roomNotifier.sendToRoom(room, roomStateMessageDto);
+                } else {
+                    sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
+                }
+            }
+
+            case "LEAVE_ROOM" -> {
+                Long playerId = (Long) session.getAttributes().get("playerId");
+
+                Object messageDto = lobbyService.leaveRoom(playerId);
+
+                if (messageDto instanceof LeftRoomMessageDto leftRoomMessageDto) {
+                    String roomId = leftRoomMessageDto.getRoomId();
+                    Room room = lobbyService.getRoomByUUID(UUID.fromString(roomId));
+
+                    if (room != null && !room.isStarted()) {
+                        RoomStateMessageDto roomStateMessageDto = lobbyService.buildRoomState(room);
+                        roomNotifier.sendToRoom(room, roomStateMessageDto);
+                    }
+                }
+                sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
+            }
+
+            case "LEAVE_DURING_GAME" -> {
+                Long playerId = (Long) session.getAttributes().get("playerId");
+
+                Room room = lobbyService.getRoomForPlayer(playerId);
+
+                if (room == null) {
+                    ErrorMessageDto errorMessageDto = new ErrorMessageDto();
+                    errorMessageDto.setMessage("You are not in a room");
+                    sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
+                    return;
+                }
+
+                if (!room.isStarted()) {
+                    ErrorMessageDto errorMessageDto = new ErrorMessageDto();
+                    errorMessageDto.setMessage("Room is not started yet !!");
+                    sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
+                    return;
+                }
+
+                Object messageDto = gameService.leaveRoomWhilePlay(playerId, room);
+                sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
+
+            }
+
+            case "PLAY" -> {
+                Long playerId = (Long) session.getAttributes().get("playerId");
+
+                Object messageDto = gameService.play(playerId, data.getCards());
+
+                if (messageDto instanceof ErrorMessageDto) {
+                    sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
+                }
+
+            }
+
+            case "PASS" -> {
+                Long playerId = (Long) session.getAttributes().get("playerId");
+
+                Object messageDto = gameService.pass(playerId);
+
+                if (messageDto instanceof ErrorMessageDto) {
+                    sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
+                }
+            }
+
 
             default -> {
                 ErrorMessageDto errorMessageDto = new ErrorMessageDto();
-                errorMessageDto.setType("ERROR");
                 errorMessageDto.setMessage("UNKNOWN TYPE bro !!!");
                 sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(errorMessageDto)));
             }
@@ -193,11 +297,25 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
         // remove recorded session from mapping
 
+        Long playerId = (Long) session.getAttributes().get("playerId");
+        Room room = lobbyService.getRoomForPlayer(playerId);
 
-        sessionRegistry.remove(session);
-        log.info("WebSocket disconnected: {} ({} online)", session.getId(), sessionRegistry.count());
+        // not in a room
+        if (room == null) {
+            sessionRegistry.remove(session);
+            // in a room but not started yet
+        } else if (!room.isStarted()) {
+            // expect LeftRoomMessageDto in happy path, BUT ErrorMessageDto in case of error
+            Object messageDto = lobbyService.leaveRoom(playerId);
 
-        // update everyone about this
-        sessionRegistry.broadcast("online " + sessionRegistry.count());
+            if (messageDto instanceof LeftRoomMessageDto leftRoomMessageDto) {
+                RoomStateMessageDto roomStateMessageDto = lobbyService.buildRoomState(room);
+                roomNotifier.sendToRoom(room, roomStateMessageDto);
+                sessionRegistry.remove(session);
+            }
+        } else if (room.isStarted()) {
+            gameService.leaveRoomWhilePlay(playerId, room);
+            sessionRegistry.remove(session);
+        }
     }
 }

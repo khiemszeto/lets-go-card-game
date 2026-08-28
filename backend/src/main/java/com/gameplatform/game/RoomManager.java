@@ -73,9 +73,12 @@ public class RoomManager {
 
             if (room.isEmpty()) {
                 rooms.remove(roomId);
-
             }
         }
+    }
+
+    public java.util.Collection<Room> listRooms() {
+        return rooms.values();
     }
 
 

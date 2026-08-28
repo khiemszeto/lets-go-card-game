@@ -1,5 +1,6 @@
-package com.gameplatform.websocket.dto;
+package com.gameplatform.websocket.dto.outbound.lobby;
 
+import com.gameplatform.websocket.dto.common.RoomPlayerDto;
 import lombok.Getter;
 import lombok.Setter;
 

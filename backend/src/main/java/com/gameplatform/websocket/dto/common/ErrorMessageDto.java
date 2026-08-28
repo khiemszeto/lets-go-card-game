@@ -1,4 +1,4 @@
-package com.gameplatform.websocket.dto;
+package com.gameplatform.websocket.dto.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -10,6 +10,6 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ErrorMessageDto {
-    private String type;
+    private final String type = "ERROR";
     private String message;
 }

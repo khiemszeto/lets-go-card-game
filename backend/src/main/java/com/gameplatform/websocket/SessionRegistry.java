@@ -26,6 +26,11 @@ public class SessionRegistry {
     private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
     private final Map<Long, WebSocketSession> sessionPlayers = new ConcurrentHashMap<>();
 
+
+    private WebSocketSession getSessionByPlayerId(Long playerId) {
+        return sessionPlayers.get(playerId);
+    }
+
     public void add(WebSocketSession session, Long playerId) throws IOException {
         // check if player is already connected
         if (sessionPlayers.containsKey(playerId)) {
@@ -70,6 +75,13 @@ public class SessionRegistry {
             send(session, message);
         }
     }
+
+    public void sendToPlayer(Long playerId, TextMessage message) {
+        WebSocketSession session = getSessionByPlayerId(playerId);
+        if (session == null) return;
+        send(session, message);
+    }
+
 
     public void send(WebSocketSession session, TextMessage message) {
         if (!session.isOpen()) {

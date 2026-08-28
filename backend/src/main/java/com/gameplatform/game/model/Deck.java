@@ -24,6 +24,7 @@ public class Deck {
         System.out.println(cards);
     }
 
+    // each time deal 13 cards
     public List<Card> dealCards() {
         if (cards.isEmpty()) throw new IllegalStateException("No cards in Deck");
 
@@ -35,6 +36,8 @@ public class Deck {
         System.out.println(dealCards);
         return  dealCards;
     }
+
+
 
 
 }
