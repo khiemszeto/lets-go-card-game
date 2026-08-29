@@ -10,7 +10,10 @@ import java.util.HashMap;
 
 import com.gameplatform.dto.CreatePlayerResponseDto;
 import com.gameplatform.exception.ResourceNotFoundException;
+import com.gameplatform.service.GameService;
+import com.gameplatform.service.LobbyService;
 import com.gameplatform.service.PlayerService;
+import com.gameplatform.websocket.dto.common.ErrorMessageDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -22,7 +25,11 @@ public class GamePlayWebSocketHandlerTest {
     private final PlayerService playerService = mock(PlayerService.class);
     private final SessionRegistry sessionRegistry = new SessionRegistry();
     private ObjectMapper objectMapper = new ObjectMapper();
-    private final GamePlayWebSocketHandler handler = new GamePlayWebSocketHandler(sessionRegistry, playerService, objectMapper);
+    private final LobbyService lobbyService = mock(LobbyService.class);
+    private final GameService gameService = mock(GameService.class);
+    private final RoomNotifier roomNotifier = mock(RoomNotifier.class);
+    private final GamePlayWebSocketHandler handler = new GamePlayWebSocketHandler(
+            sessionRegistry, playerService, lobbyService, gameService, objectMapper, roomNotifier);
 
     @Test
     void connectionSendsWelcomeAndOnlineCount() throws Exception {
@@ -49,16 +56,25 @@ public class GamePlayWebSocketHandlerTest {
     }
 
     @Test
-    void messageIsBroadcastToEveryConnectedSession() throws Exception {
-        WebSocketSession sender = openSession("s1", 1L);
-        WebSocketSession other = openSession("s2", 2L);
-        handler.afterConnectionEstablished(sender);
-        handler.afterConnectionEstablished(other);
+    void pingIsAnsweredWithPong() throws Exception {
+        WebSocketSession session = openSession("s1", 1L);
+        handler.afterConnectionEstablished(session);
 
-        handler.handleTextMessage(sender, new TextMessage("hello"));
+        handler.handleTextMessage(session, new TextMessage("{\"type\":\"PING\"}"));
 
-        verify(sender).sendMessage(new TextMessage("s1: hello"));
-        verify(other).sendMessage(new TextMessage("s1: hello"));
+        verify(session).sendMessage(new TextMessage("{\"type\":\"PONG\"}"));
+    }
+
+    @Test
+    void invalidJsonIsAnsweredWithError() throws Exception {
+        WebSocketSession session = openSession("s1", 1L);
+        handler.afterConnectionEstablished(session);
+
+        handler.handleTextMessage(session, new TextMessage("hello"));
+
+        ErrorMessageDto expected = new ErrorMessageDto();
+        expected.setMessage("Json invalid bro !!");
+        verify(session).sendMessage(new TextMessage(objectMapper.writeValueAsString(expected)));
     }
 
     @Test

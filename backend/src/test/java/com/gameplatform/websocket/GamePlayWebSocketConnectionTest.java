@@ -36,7 +36,7 @@ public class GamePlayWebSocketConnectionTest {
     private PlayerService playerService;
 
     @Test
-    void clientConnectsAndIsEchoed() throws Exception {
+    void clientConnectsAndIsAnsweredOverTheSocket() throws Exception {
         BlockingQueue<String> alice = new LinkedBlockingQueue<>();
         BlockingQueue<String> bob = new LinkedBlockingQueue<>();
 
@@ -51,8 +51,8 @@ public class GamePlayWebSocketConnectionTest {
         // check if alice received the auto broadcast when new player has joined
         assertThat(alice.poll(5, SECONDS)).isEqualTo("online 2");
 
-        bobSession.sendMessage(new TextMessage("ping"));
-        assertThat(alice.poll(5, SECONDS)).endsWith(": ping");
+        bobSession.sendMessage(new TextMessage("{\"type\":\"PING\"}"));
+        assertThat(bob.poll(5, SECONDS)).isEqualTo("{\"type\":\"PONG\"}");
 
         aliceSession.close();
         bobSession.close();
