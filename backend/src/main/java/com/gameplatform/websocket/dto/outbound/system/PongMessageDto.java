@@ -1,4 +1,4 @@
-package com.gameplatform.websocket.dto;
+package com.gameplatform.websocket.dto.outbound.system;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
