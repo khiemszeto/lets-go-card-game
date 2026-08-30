@@ -145,7 +145,7 @@ public class TienLenValidator {
     }
 
     public Card getLowestCard(List<Card> cards) {
-        return sortedCopy(cards).get(0);
+        return sortedCopy(cards).getFirst();
     }
 
     /**

@@ -58,8 +58,8 @@ public class GameService {
         boolean freeLead = room.getLastPlayCards() == null || room.getLastPlayCards().isEmpty();
 
         if (freeLead && !room.isFirstTrickPlayed()){
-            if (hand.contains(new Card(Suit.SPADE, Rank.THREE))
-                    && !playedCards.contains(new Card(Suit.SPADE, Rank.THREE))) {
+            if (hand.contains(new Card(Suit.SPADES, Rank.THREE))
+                    && !playedCards.contains(new Card(Suit.SPADES, Rank.THREE))) {
                 return error("First play must include a three of spades");
             }
             if (!playedCards.contains(validator.getLowestCard(hand))) {
