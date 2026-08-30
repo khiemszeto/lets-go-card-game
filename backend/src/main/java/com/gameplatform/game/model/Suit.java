@@ -1,7 +1,7 @@
 package com.gameplatform.game.model;
 
 public enum Suit {
-    SPADE,
+    SPADES,
     CLUBS,
     DIAMONDS,
     HEARTS,

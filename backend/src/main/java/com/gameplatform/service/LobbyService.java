@@ -266,7 +266,7 @@ public class LobbyService {
         for (Long playerId: players) {
             List<Card> hand = deck.dealCards();
 
-            if (hand.contains(new Card(Suit.SPADE, Rank.THREE))) room.setCurrentTurnPlayerId(playerId);
+            if (hand.contains(new Card(Suit.SPADES, Rank.THREE))) room.setCurrentTurnPlayerId(playerId);
             room.setHand(playerId, hand);
 
 
