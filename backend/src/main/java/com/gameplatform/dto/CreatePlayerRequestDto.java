@@ -16,10 +16,6 @@ public class CreatePlayerRequestDto {
     @Email(message = "Invalid email format")
     private String email;
 
-    @NotNull(message = "Birth date is required")
-    @Past(message = "Birth date must be in the past")
-    private LocalDate birthDate;
-
     public String getUsername() {
         return username;
     }

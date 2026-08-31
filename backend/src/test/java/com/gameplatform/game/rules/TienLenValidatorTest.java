@@ -94,6 +94,7 @@ public class TienLenValidatorTest {
         assertThat(validator.canPlay(List.of(c(FOUR, SPADES)), List.of(c(THREE, SPADES)))).isTrue();
         assertThat(validator.canPlay(List.of(c(THREE, HEARTS)), List.of(c(THREE, SPADES)))).isTrue();
         assertThat(validator.canPlay(List.of(c(THREE, SPADES)), List.of(c(THREE, HEARTS)))).isFalse();
+        assertThat(validator.canPlay(List.of(c(THREE, SPADES)), List.of(c(TWO, HEARTS)))).isFalse();
 
         assertThat(validator.canPlay(
                 List.of(c(FOUR, SPADES), c(FOUR, CLUBS)),

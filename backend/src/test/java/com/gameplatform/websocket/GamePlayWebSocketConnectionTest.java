@@ -22,7 +22,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import com.gameplatform.TestcontainersConfiguration;
 import com.gameplatform.dto.CreatePlayerRequestDto;
 import com.gameplatform.dto.CreatePlayerResponseDto;
-import com.gameplatform.service.PlayerService;
+import com.gameplatform.service.AuthPlayerService;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT)
 @Import(TestcontainersConfiguration.class)
@@ -33,7 +33,7 @@ public class GamePlayWebSocketConnectionTest {
 
     // ask Spring to wire us up to the PlayerService bean such that we can add Player Record to the test DB
     @Autowired
-    private PlayerService playerService;
+    private AuthPlayerService authPlayerService;
 
     @Test
     void clientConnectsAndIsAnsweredOverTheSocket() throws Exception {
@@ -78,6 +78,6 @@ public class GamePlayWebSocketConnectionTest {
         request.setPassword("password" + unique);
         request.setEmail("player" + unique + "@mailinator.com");
         request.setBirthDate(LocalDate.of(2000, 1, 1));
-        return playerService.createPlayer(request);
+        return authPlayerService.createPlayer(request);
     }
 }

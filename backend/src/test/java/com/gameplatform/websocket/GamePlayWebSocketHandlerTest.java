@@ -12,7 +12,7 @@ import com.gameplatform.dto.CreatePlayerResponseDto;
 import com.gameplatform.exception.ResourceNotFoundException;
 import com.gameplatform.service.GameService;
 import com.gameplatform.service.LobbyService;
-import com.gameplatform.service.PlayerService;
+import com.gameplatform.service.AuthPlayerService;
 import com.gameplatform.websocket.dto.common.ErrorMessageDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.web.socket.CloseStatus;
@@ -22,14 +22,14 @@ import tools.jackson.databind.ObjectMapper;
 
 public class GamePlayWebSocketHandlerTest {
 
-    private final PlayerService playerService = mock(PlayerService.class);
+    private final AuthPlayerService authPlayerService = mock(AuthPlayerService.class);
     private final SessionRegistry sessionRegistry = new SessionRegistry();
     private ObjectMapper objectMapper = new ObjectMapper();
     private final LobbyService lobbyService = mock(LobbyService.class);
     private final GameService gameService = mock(GameService.class);
     private final RoomNotifier roomNotifier = mock(RoomNotifier.class);
     private final GamePlayWebSocketHandler handler = new GamePlayWebSocketHandler(
-            sessionRegistry, playerService, lobbyService, gameService, objectMapper, roomNotifier);
+            sessionRegistry, authPlayerService, lobbyService, gameService, objectMapper, roomNotifier);
 
     @Test
     void connectionSendsWelcomeAndOnlineCount() throws Exception {
@@ -47,7 +47,7 @@ public class GamePlayWebSocketHandlerTest {
         when(session.getId()).thenReturn("s1");
         when(session.isOpen()).thenReturn(true);
         when(session.getUri()).thenReturn(URI.create("ws://localhost/ws?playerId=99"));
-        when(playerService.getPlayer(99L)).thenThrow(new ResourceNotFoundException("nope"));
+        when(authPlayerService.getPlayer(99L)).thenThrow(new ResourceNotFoundException("nope"));
 
         handler.afterConnectionEstablished(session);
 
@@ -97,7 +97,7 @@ public class GamePlayWebSocketHandlerTest {
         CreatePlayerResponseDto player = new CreatePlayerResponseDto();
         player.setId(playerId);
         player.setUsername("player" + playerId);
-        when(playerService.getPlayer(playerId)).thenReturn(player);
+        when(authPlayerService.getPlayer(playerId)).thenReturn(player);
 
         return session;
     }

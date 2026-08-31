@@ -17,6 +17,8 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
 
     List<Player> findTop10ByOrderByBalanceDesc();
 
+    Optional<Player> findByUsername(String username);
+
     @Query(value = """
             SELECT *
             FROM player
@@ -34,4 +36,6 @@ public interface PlayerRepository extends JpaRepository<Player, Long> {
     List<Player> findByEmail(@Param("email") String email);
 
     Optional<Player> findByIdAndDeletedIsFalse(Long id);
+
+
 }

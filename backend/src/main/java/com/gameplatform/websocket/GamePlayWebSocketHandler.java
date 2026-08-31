@@ -5,7 +5,7 @@ import com.gameplatform.exception.ResourceNotFoundException;
 import com.gameplatform.game.Room;
 import com.gameplatform.service.GameService;
 import com.gameplatform.service.LobbyService;
-import com.gameplatform.service.PlayerService;
+import com.gameplatform.service.AuthPlayerService;
 import com.gameplatform.websocket.dto.common.ErrorMessageDto;
 import com.gameplatform.websocket.dto.inbound.ClientMessageDto;
 import com.gameplatform.websocket.dto.outbound.lobby.LeftRoomMessageDto;
@@ -44,7 +44,7 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
     private final SessionRegistry sessionRegistry;
 
-    private PlayerService playerService;
+    private AuthPlayerService authPlayerService;
 
     private ObjectMapper objectMapper;
 
@@ -55,14 +55,14 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
     private RoomNotifier roomNotifier;
 
     public GamePlayWebSocketHandler(SessionRegistry sessionRegistry,
-                                    PlayerService playerService,
+                                    AuthPlayerService authPlayerService,
                                     LobbyService lobbyService,
                                     GameService gameService,
                                     ObjectMapper objectMapper,
                                     RoomNotifier roomNotifier
     ) {
         this.sessionRegistry = sessionRegistry;
-        this.playerService = playerService;
+        this.authPlayerService = authPlayerService;
         this.objectMapper = objectMapper;
         this.lobbyService = lobbyService;
         this.roomNotifier = roomNotifier;
@@ -98,7 +98,7 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
         CreatePlayerResponseDto player;
         try {
-            player = playerService.getPlayer(playerId);
+            player = authPlayerService.getPlayer(playerId);
         } catch (ResourceNotFoundException e) {
             session.close(CloseStatus.BAD_DATA.withReason("Invalid playerId"));
             return;
