@@ -15,51 +15,52 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.gameplatform.dto.CreatePlayerRequestDto;
 import com.gameplatform.dto.CreatePlayerResponseDto;
-import com.gameplatform.service.PlayerService;
+import com.gameplatform.service.AuthPlayerService;
 
 import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/players")
 public class PlayerController {
-    PlayerService playerService;
+    AuthPlayerService authPlayerService;
 
-    public PlayerController(PlayerService playerService) {
-        this.playerService = playerService;
+
+    public PlayerController(AuthPlayerService authPlayerService) {
+        this.authPlayerService = authPlayerService;
     }
 
-    @PostMapping
+    @PostMapping("/register")
     public ResponseEntity<CreatePlayerResponseDto> createPlayer(
             @Valid @RequestBody CreatePlayerRequestDto createPlayerRequestDto) {
 
-        CreatePlayerResponseDto createPlayerResponseDto = playerService.createPlayer(createPlayerRequestDto);
+        CreatePlayerResponseDto createPlayerResponseDto = authPlayerService.createPlayer(createPlayerRequestDto);
 
         return ResponseEntity.ok(createPlayerResponseDto);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deletePlayerSoftly(@PathVariable Long id) {
-        playerService.deletePlayerSoftly(id);
+        authPlayerService.deletePlayerSoftly(id);
         return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
     }
 
     @GetMapping
     public ResponseEntity<List<CreatePlayerResponseDto>> getAllPlayers() {
-        List<CreatePlayerResponseDto> playerList = playerService.getAllPlayers();
+        List<CreatePlayerResponseDto> playerList = authPlayerService.getAllPlayers();
 
         return ResponseEntity.ok(playerList);
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<CreatePlayerResponseDto> getPlayer(@PathVariable Long id) {
-        CreatePlayerResponseDto player = playerService.getPlayer(id);
+        CreatePlayerResponseDto player = authPlayerService.getPlayer(id);
 
         return ResponseEntity.ok(player);
     }
 
     @GetMapping("/top")
     public ResponseEntity<List<CreatePlayerResponseDto>> getTopPlayers() {
-        List<CreatePlayerResponseDto> topPlayers = playerService.getTop10Players();
+        List<CreatePlayerResponseDto> topPlayers = authPlayerService.getTop10Players();
 
 
         return ResponseEntity.ok(topPlayers);

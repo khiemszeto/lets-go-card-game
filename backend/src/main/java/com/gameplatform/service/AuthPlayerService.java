@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.gameplatform.annotation.TrackExecutionTime;
@@ -17,12 +18,13 @@ import com.gameplatform.exception.ResourceNotFoundException;
 import com.gameplatform.repository.PlayerRepository;
 
 @Service
-public class PlayerService {
-    PlayerRepository playerRepository;
+public class AuthPlayerService {
+    private PlayerRepository playerRepository;
+    private PasswordEncoder passwordEncoder;
 
-
-    public PlayerService(PlayerRepository playerRepository) {
+    public AuthPlayerService(PlayerRepository playerRepository,PasswordEncoder passwordEncoder) {
         this.playerRepository = playerRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @TrackExecutionTime(
@@ -114,8 +116,10 @@ public class PlayerService {
         Player player = new Player();
 
         player.setUsername(requestDto.getUsername());
-        player.setPassword(requestDto.getPassword());
-        player.setBirthDate(requestDto.getBirthDate());
+
+        String endecodedPassword = passwordEncoder.encode(requestDto.getPassword());
+        player.setPassword(endecodedPassword);
+
         player.setEmail(requestDto.getEmail());
         player.setCreatedAt(LocalDateTime.now());
         player.setUpdatedAt(LocalDateTime.now());
