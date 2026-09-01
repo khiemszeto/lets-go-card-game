@@ -4,6 +4,7 @@ import static com.gameplatform.game.model.Rank.ACE;
 import static com.gameplatform.game.model.Rank.FIVE;
 import static com.gameplatform.game.model.Rank.FOUR;
 import static com.gameplatform.game.model.Rank.KING;
+import static com.gameplatform.game.model.Rank.SEVEN;
 import static com.gameplatform.game.model.Rank.SIX;
 import static com.gameplatform.game.model.Rank.THREE;
 import static com.gameplatform.game.model.Rank.TWO;
@@ -13,6 +14,7 @@ import static com.gameplatform.game.model.Suit.HEARTS;
 import static com.gameplatform.game.model.Suit.SPADES;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -63,7 +65,13 @@ public class TienLenValidatorTest {
                                 c(FOUR, SPADES), c(FOUR, CLUBS), c(FOUR, DIAMONDS))),
                 Arguments.of("consecutive pairs containing 2s",
                         List.of(c(KING, SPADES), c(KING, CLUBS), c(ACE, SPADES), c(ACE, CLUBS),
-                                c(TWO, SPADES), c(TWO, CLUBS))));
+                                c(TWO, SPADES), c(TWO, CLUBS))),
+                Arguments.of("straight of only two cards",
+                        List.of(c(THREE, SPADES), c(FOUR, SPADES))),
+                Arguments.of("5 consecutive pairs",
+                        List.of(c(THREE, SPADES), c(THREE, CLUBS), c(FOUR, SPADES), c(FOUR, CLUBS),
+                                c(FIVE, SPADES), c(FIVE, CLUBS), c(SIX, SPADES), c(SIX, CLUBS),
+                                c(SEVEN, SPADES), c(SEVEN, CLUBS))));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -99,6 +107,36 @@ public class TienLenValidatorTest {
         assertThat(validator.canPlay(
                 List.of(c(FOUR, SPADES), c(FOUR, CLUBS)),
                 List.of(c(THREE, SPADES), c(THREE, CLUBS)))).isTrue();
+    }
+
+    static Stream<Arguments> strictlyStronger() {
+        return Stream.of(
+                Arguments.of("straight by top rank",
+                        List.of(c(THREE, SPADES), c(FOUR, SPADES), c(FIVE, SPADES)),
+                        List.of(c(FOUR, SPADES), c(FIVE, SPADES), c(SIX, SPADES))),
+                // only the top card decides: the loser here holds the higher bottom card
+                Arguments.of("straight by top suit",
+                        List.of(c(THREE, HEARTS), c(FOUR, HEARTS), c(FIVE, SPADES)),
+                        List.of(c(THREE, SPADES), c(FOUR, SPADES), c(FIVE, HEARTS))),
+                Arguments.of("consecutive pairs by top rank",
+                        threeSeqPair(),
+                        List.of(c(FOUR, SPADES), c(FOUR, CLUBS),
+                                c(FIVE, SPADES), c(FIVE, CLUBS),
+                                c(SIX, SPADES), c(SIX, CLUBS))),
+                Arguments.of("consecutive pairs by top suit",
+                        List.of(c(THREE, DIAMONDS), c(THREE, HEARTS),
+                                c(FOUR, SPADES), c(FOUR, CLUBS),
+                                c(FIVE, SPADES), c(FIVE, CLUBS)),
+                        List.of(c(THREE, SPADES), c(THREE, CLUBS),
+                                c(FOUR, DIAMONDS), c(FOUR, HEARTS),
+                                c(FIVE, DIAMONDS), c(FIVE, HEARTS))));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("strictlyStronger")
+    void strongerBeatsWeakerAndNotTheReverse(String name, List<Card> weaker, List<Card> stronger) {
+        assertThat(validator.canPlay(stronger, weaker)).isTrue();
+        assertThat(validator.canPlay(weaker, stronger)).isFalse();
     }
 
     @Test
@@ -163,6 +201,18 @@ public class TienLenValidatorTest {
     }
 
     @Test
+    void validationDoesNotReorderTheCallersList() {
+        // GameService passes its live hand list in, then removes from it
+        List<Card> hand = new ArrayList<>(List.of(c(FIVE, HEARTS), c(THREE, SPADES), c(FOUR, SPADES)));
+        List<Card> snapshot = List.copyOf(hand);
+
+        validator.getLowestCard(hand);
+        validator.isValidCombo(hand);
+
+        assertThat(hand).containsExactlyElementsOf(snapshot);
+    }
+
+    @Test
     void cardsMayArriveInAnyOrder() {
         // assuming No trust for Front end
         assertThat(validator.isValidCombo(List.of(c(FIVE, SPADES), c(THREE, SPADES), c(FOUR, SPADES)))).isTrue();
@@ -171,6 +221,8 @@ public class TienLenValidatorTest {
                 c(FOUR, SPADES), c(FIVE, SPADES), c(THREE, CLUBS)))).isTrue(); // shuffled 3 seq pairs
     }
 
+
+    // =============== private helpers to help set up the test cases ===============
     // static factory to construct card
     private static Card c(Rank rank, Suit suit) {
         return new Card(suit, rank);
