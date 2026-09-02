@@ -1,4 +1,5 @@
-
+/* The deck's own stylesheet is not imported here - it styles a bare `.card`, the
+   same class daisyUI uses, so CardOrbit scopes it to the orbit instead. */
 @import "tailwindcss";
 
 @plugin "daisyui" {
@@ -48,11 +49,43 @@
     --color-muted: #7a9a88;
 }
 
+/* The page background lives on html, not body. Where daisyUI paints :root, so a body
+   background would no longer propagate to the canvas - it would paint as an
+   ordinary box background, on top of the z-index:-1 card orbit behind it. */
+html {
+    background:
+            radial-gradient(circle at top, rgba(40, 115, 74, 0.15), transparent 45%),
+            linear-gradient(180deg, #0d0804, #1a1208);
+}
+
 body {
     min-height: 100svh;
     font-family: "Segoe UI", system-ui, sans-serif;
     color: var(--color-base-content);
-    background:
-            radial-gradient(circle at top, rgba(40, 115, 74, 0.15), transparent 45%),
-            linear-gradient(180deg, #0d0804, #1a1208);
+}
+
+/* The login and register card, sized from the viewport rather than pinned to a
+   fixed max-width. daisyUI reads its padding and type off these variables, and
+   sizes .input and .btn as --size-field * 10, so setting them here scales the
+   whole card - box, text and controls - as the window changes.
+ *
+ * --u tracks whichever viewport dimension is tighter, so dragging the window
+ * shorter shrinks the card as surely as dragging it narrower. A width-only
+ * measure leaves the height fixed, which is the whole thing a card this shape
+ * needs to get right. The rem ends of each clamp are the floor and ceiling, and
+ * are what a browser zoom scales; a bare vw/vh value ignores zoom entirely.
+ *
+ * The card's own height is the sum of these, so everything inside it that
+ * contributes height - gaps and margins included - is set in em by the pages. */
+.auth-card {
+    --u: min(1vw, 1.9vh);
+    width: 100%;
+    max-width: clamp(18rem, calc(var(--u) * 30), 34rem);
+    --card-p: clamp(0.875rem, calc(var(--u) * 1.6), 2.5rem);
+    --card-fs: clamp(0.75rem, var(--u), 1.125rem);
+    --cardtitle-fs: clamp(1.125rem, calc(var(--u) * 1.8), 2.25rem);
+    --size-field: clamp(0.22rem, calc(var(--u) * 0.3), 0.34rem);
+    /* .btn reads --fontsize; .input reads --font-size. */
+    --fontsize: clamp(0.75rem, var(--u), 1.0625rem);
+    --font-size: clamp(0.75rem, var(--u), 1.0625rem);
 }

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.1",
+    "@magmacrunch/adenosine-cards": "^0.8.0",
     "@tailwindcss/vite": "^4.3.3",
     "daisyui": "^5.7.27",
     "react": "^19.2.8",

@@ -73,3 +73,24 @@ cd ../backend
 # 4. Run it
 java25 -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
+
+---
+
+## Third-party notices
+
+The card faces and deck styling come from
+[@magmacrunch/adenosine-cards](https://github.com/magmacrunchmedia/adenosine),
+which ships in the production bundle:
+
+> Adenosine
+> Copyright 2026 Magma Crunch Media
+>
+> This product includes software developed by Magma Crunch Media
+> (https://magmacrunch.com).
+>
+> Adenosine is a collection of lightweight web game engines:
+> https://github.com/magmacrunchmedia/adenosine
+
+Licensed under the Apache License 2.0. We use it unmodified. A copy of the
+license and the upstream `NOTICE` are kept in
+[`third-party/adenosine-cards/`](third-party/adenosine-cards/).

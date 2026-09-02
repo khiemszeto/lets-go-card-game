@@ -31,14 +31,14 @@ function LoginPage({onGoRegister, onSuccess} : Props) {
     }
     return (
         <div className="grid min-h-[70svh] place-items-center p-8">
-            <div className="card w-full max-w-md bg-base-200 shadow-xl">
-                <div className="card-body">
-                    <p className="text-xs uppercase tracking-widest text-gold">Tiến Lên</p>
-                    <h2 className="card-title text-2xl">Enter the Lobby</h2>
-                    <p className="text-sm text-muted">Sign in to play Thirteen Cards</p>
+            <div className="card auth-card bg-base-200 shadow-xl">
+                <div className="card-body gap-[0.55em]">
+                    <p className="text-[0.72em] uppercase tracking-widest text-gold">Tiến Lên</p>
+                    <h2 className="card-title">Enter the Lobby</h2>
+                    <p className="text-[0.9em] text-muted">Sign in to play Thirteen Cards</p>
 
 
-                <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-3">
+                <form onSubmit={handleSubmit} className="mt-[1.2em] flex flex-col gap-[0.8em]">
 
                         <input
                             className="input input-bordered w-full"
@@ -63,7 +63,7 @@ function LoginPage({onGoRegister, onSuccess} : Props) {
                         {loading ? 'Logging in…' : 'Login'}
                     </button>
                 </form>
-            <p className="mt-4 text-center text-sm">
+            <p className="mt-[1.2em] text-center text-[0.9em]">
                 Don&apos;t have an account?{' '}
                 <button className="btn btn-link btn-sm" type="button" onClick={onGoRegister}>Register</button>
             </p>

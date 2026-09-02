@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Header from './components/Header.tsx'
+import CardOrbit from './components/CardOrbit'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import LobbyPage from './pages/LobbyPage'
@@ -18,6 +19,7 @@ function App() {
 
   return (
     <div className="flex min-h-svh flex-col">
+        <CardOrbit />
 
         <Header username={screen === 'lobby' ? getUsername() : null} />
         <main className="flex-1">

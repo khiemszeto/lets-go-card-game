@@ -1,0 +1,37 @@
+/* Structural styles for the card orbit. Positions the cards from @magmacrunch/adenosine-cards. */
+
+.orbit {
+    position: fixed;
+    /* top and bottom are replaced at runtime with the header's and footer's
+       measured heights. */
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    z-index: -1;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.orbit-card {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* Shift the card onto its own centre so the computed point is its middle. */
+    margin-top: -70px;
+    margin-left: -50px;
+    /* The library sets transition: transform .1s, which would smear a transform
+       we rewrite every frame. */
+    transition: none;
+    cursor: default;
+    /* daisyUI's .card also matches these elements and now outranks the library's
+       layer, so restore the deck's own corner. */
+    border-radius: 4px;
+}
+
+@media (max-width: 640px) {
+    /* Don't have room to orbit a phone without burying the page content. */
+    .orbit {
+        display: none;
+    }
+}
