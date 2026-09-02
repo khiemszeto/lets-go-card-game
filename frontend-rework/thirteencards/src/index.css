@@ -1,0 +1,58 @@
+
+@import "tailwindcss";
+
+@plugin "daisyui" {
+    themes: green-thirteen --default;
+}
+
+@plugin "daisyui/theme" {
+    name: "green-thirteen";
+    default: true;
+    prefersdark: false;
+    color-scheme: "dark";
+    --color-base-100: #1a1208;
+    --color-base-200: #24180f;
+    --color-base-300: #24180f;
+    --color-base-content: #f5f5f5;
+    --color-primary: #28734a;
+    --color-primary-content: oklch(98% 0.003 247.858);
+    --color-secondary: #3d2a1a;
+    --color-secondary-content: oklch(98% 0.003 247.858);
+    --color-accent: #3d8f5f;
+    --color-accent-content: oklch(98% 0.003 247.858);
+    --color-neutral: oklch(14% 0 0);
+    --color-neutral-content: oklch(98% 0 0);
+    --color-info: oklch(60% 0.126 221.723);
+    --color-info-content: oklch(98% 0.019 200.873);
+    --color-success: oklch(64% 0.2 131.684);
+    --color-success-content: oklch(98% 0.003 247.858);
+    --color-warning: oklch(68% 0.162 75.834);
+    --color-warning-content: oklch(98% 0.026 102.212);
+    --color-error: 	 #e05a5a;
+    --color-error-content: oklch(92% 0.006 264.531);
+    --radius-selector: 0.5rem;
+    --radius-field: 0.5rem;
+    --radius-box: 1rem;
+    --size-selector: 0.25rem;
+    --size-field: 0.25rem;
+    --border: 1px;
+    --depth: 0;
+    --noise: 0;
+}
+
+
+@theme {
+    --color-felt: #1f5c3a;
+    --color-felt-light: #28734a;
+    --color-gold: #d4a853;
+    --color-muted: #7a9a88;
+}
+
+body {
+    min-height: 100svh;
+    font-family: "Segoe UI", system-ui, sans-serif;
+    color: var(--color-base-content);
+    background:
+            radial-gradient(circle at top, rgba(40, 115, 74, 0.15), transparent 45%),
+            linear-gradient(180deg, #0d0804, #1a1208);
+}
