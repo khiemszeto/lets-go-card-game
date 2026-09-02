@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Header from './components/Header.tsx'
+import CardOrbit from './components/CardOrbit'
 import LoginPage from './components/LoginPage'
 import RegisterPage from './components/RegisterPage'
 
@@ -13,6 +14,8 @@ function App() {
   return (
     <>
         <Header></Header>
+        <CardOrbit />
+
         {screen === 'login' && (
             <LoginPage
                 onGoRegister={() => setScreen('register')}
