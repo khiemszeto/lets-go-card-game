@@ -55,7 +55,7 @@ public class SecurityConfig {
                 .authenticationProvider(daoAuthenticationProvider)
                 .authorizeHttpRequests(
                         auth ->
-                                auth.requestMatchers("/api/players/register", "/login").permitAll()
+                                auth.requestMatchers("/api/players/register", "/login", "/ws").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .sessionManagement(
@@ -82,8 +82,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            DaoAuthenticationProvider authenticationProvider) {
+    public AuthenticationManager authenticationManager(DaoAuthenticationProvider authenticationProvider) {
         return new ProviderManager(authenticationProvider);
     }
 

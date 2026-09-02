@@ -26,7 +26,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
 
@@ -40,7 +39,7 @@ public class LobbyService {
 
     private final RoomNotifier roomNotifier;
     private RoomManager roomManager;
-    private ConcurrentHashMap<UUID, List<ScheduledFuture<?>>> countdownRooms = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<Integer, List<ScheduledFuture<?>>> countdownRooms = new ConcurrentHashMap<>();
     private TaskScheduler taskScheduler;
     private TienLenValidator tienLenValidator;
 
@@ -55,18 +54,18 @@ public class LobbyService {
     }
 
     public Object createRoom(Long playerId, String username) {
-        UUID roomID = roomManager.createRoom(playerId, username);
+        Integer roomID = roomManager.createRoom(playerId, username);
 
         if (roomID == null) {
            ErrorMessageDto error =  new ErrorMessageDto();
-           error.setMessage("Cannot create room, already in room");
+           error.setMessage("Cannot create room, already in room or max rooms reached");
            return error;
         }
 
         return buildRoomState(roomManager.getRoom(roomID));
     }
 
-    public Object joinRoom(Long playerId, String username, UUID roomId) {
+    public Object joinRoom(Long playerId, String username, Integer roomId) {
         RoomManager.JoinStatus status = roomManager.joinRoom(playerId, username, roomId);
 
         switch (status) {
@@ -107,7 +106,7 @@ public class LobbyService {
                     long delaySecond = 10 -sec;
 
                     ScheduledFuture<?> tick = taskScheduler.schedule(() ->
-                            sendCountdownTick(room.getId(), secondsLeft)
+                            sendCountdownTick(room.getRoomId(), secondsLeft)
                             , Instant.now().plusSeconds(delaySecond)
                             );
 
@@ -116,12 +115,12 @@ public class LobbyService {
 
                 // finish at 10s
                 ScheduledFuture<?> finish = taskScheduler.schedule(
-                        () -> onCountdownFinished(room.getId()),
+                        () -> onCountdownFinished(room.getRoomId()),
                         Instant.now().plusSeconds(10)
                 );
                 jobs.add(finish);
 
-                countdownRooms.put(room.getId(), jobs);
+                countdownRooms.put(room.getRoomId(), jobs);
             }
         }
 
@@ -143,8 +142,8 @@ public class LobbyService {
         return buildRoomState(room);
     }
 
-    public Room getRoomByUUID(UUID roomUUID) {
-        return roomManager.getRoom(roomUUID);
+    public Room getRoomById(Integer roomId) {
+        return roomManager.getRoom(roomId);
     }
 
     public Room getRoomForPlayer(Long playerId) {
@@ -158,7 +157,7 @@ public class LobbyService {
             if (room.isEmpty()) continue;
 
             RoomSummaryDto dto = new RoomSummaryDto();
-            dto.setRoomId(room.getId().toString());
+            dto.setRoomId(room.getRoomId().toString());
             dto.setMaxPlayers(4);
             dto.setPlayerCount(room.getMapOfPlayers().size());
             dto.setReadyPlayers(room.getWhoIsReady().size());
@@ -202,7 +201,7 @@ public class LobbyService {
 
         LeftRoomMessageDto leftRoomMessageDto = new LeftRoomMessageDto();
         leftRoomMessageDto.setType("LEAVE_ROOM");
-        leftRoomMessageDto.setRoomId(room.getId().toString());
+        leftRoomMessageDto.setRoomId(room.getRoomId().toString());
 
         return leftRoomMessageDto;
 
@@ -211,7 +210,7 @@ public class LobbyService {
     public RoomStateMessageDto buildRoomState(Room room) {
         RoomStateMessageDto roomStateMessageDto = new RoomStateMessageDto();
 
-        roomStateMessageDto.setRoomId(room.getId().toString());
+        roomStateMessageDto.setRoomId(room.getRoomId().toString());
         roomStateMessageDto.setReadyPlayers(room.getWhoIsReady().size());
 
         List<RoomPlayerDto> players = new ArrayList<>();
@@ -238,7 +237,7 @@ public class LobbyService {
         return dto;
     }
 
-    private void onCountdownFinished(UUID roomId) {
+    private void onCountdownFinished(Integer roomId) {
         countdownRooms.remove(roomId);
 
         Room room = roomManager.getRoom(roomId);
@@ -350,7 +349,7 @@ public class LobbyService {
         if (!room.isCountingDown()) return;
         if (room.isReadyToStart()) return;
 
-        List<ScheduledFuture<?>> jobs = countdownRooms.remove(room.getId());
+        List<ScheduledFuture<?>> jobs = countdownRooms.remove(room.getRoomId());
         if (jobs != null) {
             for (ScheduledFuture<?> job : jobs) {
                 job.cancel(false);
@@ -360,7 +359,7 @@ public class LobbyService {
         room.cancelCountingDown();
     }
 
-    private void sendCountdownTick(UUID roomId, int secondsLeft) {
+    private void sendCountdownTick(Integer roomId, int secondsLeft) {
         Room room = roomManager.getRoom(roomId);
         if (room == null || !room.isCountingDown()) return;
 

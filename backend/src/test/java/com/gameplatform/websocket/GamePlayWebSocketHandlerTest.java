@@ -15,6 +15,7 @@ import com.gameplatform.service.LobbyService;
 import com.gameplatform.service.AuthPlayerService;
 import com.gameplatform.websocket.dto.common.ErrorMessageDto;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -28,8 +29,9 @@ public class GamePlayWebSocketHandlerTest {
     private final LobbyService lobbyService = mock(LobbyService.class);
     private final GameService gameService = mock(GameService.class);
     private final RoomNotifier roomNotifier = mock(RoomNotifier.class);
+    private final JwtDecoder jwtDecoder = mock(JwtDecoder.class);
     private final GamePlayWebSocketHandler handler = new GamePlayWebSocketHandler(
-            sessionRegistry, authPlayerService, lobbyService, gameService, objectMapper, roomNotifier);
+            sessionRegistry, authPlayerService, lobbyService, gameService, objectMapper, roomNotifier, jwtDecoder);
 
     @Test
     void connectionSendsWelcomeAndOnlineCount() throws Exception {

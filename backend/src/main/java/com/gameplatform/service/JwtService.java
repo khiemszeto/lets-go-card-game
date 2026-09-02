@@ -1,5 +1,6 @@
 package com.gameplatform.service;
 
+import com.gameplatform.entity.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -26,6 +27,7 @@ public class JwtService {
 
     public String generateToken(Authentication authentication) {
         Instant now = Instant.now();
+        CustomUserDetails player = (CustomUserDetails) authentication.getPrincipal();
 
         List<String> authorities =
                 authentication.getAuthorities()
@@ -36,16 +38,10 @@ public class JwtService {
         JwtClaimsSet claims = JwtClaimsSet.builder()
                 .issuer(issuer)
                 .issuedAt(now)
-                .expiresAt(
-                        now.plusSeconds(expiry)
-                )
-                .subject(
-                        authentication.getName()
-                )
-                .claim(
-                        "authorities",
-                        authorities
-                )
+                .expiresAt(now.plusSeconds(expiry))
+                .subject(authentication.getName())
+                .claim("authorities", authorities)
+                .claim("playerId", player.getPlayerId())
                 .build();
 
         Jwt jwt = jwtEncoder.encode(

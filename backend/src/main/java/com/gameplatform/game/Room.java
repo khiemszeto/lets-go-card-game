@@ -23,7 +23,8 @@ public class Room {
     }
     private Status roomStatus;
 
-    private UUID id;
+    private Integer roomId;
+
     private HashMap<Long, String> mapOfPlayers; // playerId -> playerName *
     private Set<Long> whoIsReady;
     private List<Long> seatOrder = new ArrayList<>(); // seat order *
@@ -37,8 +38,8 @@ public class Room {
     private boolean firstTrickPlayed;
 
 
-    public Room() {
-        id = UUID.randomUUID();
+    public Room(Integer roomId) {
+        this.roomId = roomId;
         mapOfPlayers = new HashMap<>();
         whoIsReady = new HashSet<>();
         roomStatus = Status.WAITING;
