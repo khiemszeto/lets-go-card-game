@@ -11,13 +11,13 @@ export const THIRTEEN_RANKS: readonly Rank[] = [
     '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A', '2',
 ]
 
-/** Tiến lên suit order, lowest to highest. Spades are weakest, hearts strongest. */
+/** Tien Len suit order, lowest to highest. Spades are weakest, hearts strongest. */
 export const THIRTEEN_SUITS: readonly Suit[] = [
     'spades', 'clubs', 'diamonds', 'hearts',
 ]
 
 /**
- * All 52 cards in ascending Thirteen order — 3♠ first, 2♥ last.
+ * All 52 cards in ascending Thirteen order - 3 of spades first, 2 of hearts last.
  *
  * Rank leads and suit breaks the tie, which is how the game compares two
  * single cards. Every card is flipped face up; the library builds them

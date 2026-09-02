@@ -7,7 +7,7 @@ const SPEED = 16
 const RADIUS = 120
 /** Smallest gap from the viewport edge; grows with the card if needed. */
 const BASE_INSET = 30
-/** The library renders every card at a fixed 100×140. */
+/** The library renders every card at a fixed 100x140. */
 const CARD_W = 100
 const CARD_H = 140
 const MIN_SCALE = 0.15
@@ -103,7 +103,7 @@ function solveScale(path: Path, count: number): number {
  * down the right edge, back along the bottom, up the left. Cards stay upright.
  *
  * The path is a rounded rectangle rather than a sharp one. On a square corner
- * two cards an equal path-distance apart sit only 1/√2 of that distance apart
+ * two cards an equal path-distance apart sit only 1/sqrt(2) of that distance apart
  * as the crow flies, so they collide however wide the spacing. Rounding the
  * turn spreads it over an arc.
  *
@@ -131,7 +131,7 @@ function CardOrbit() {
             const headerHeight = header ? header.getBoundingClientRect().height : 0
             layer!.style.top = `${headerHeight}px`
 
-            // Read the viewport, not the layer. A hidden layer measures 0×0, and
+            // Read the viewport, not the layer. A hidden layer measures 0x0, and
             // deriving the path from that would leave the orbit stuck hidden even
             // after the window grew back.
             const width = window.innerWidth
@@ -151,8 +151,8 @@ function CardOrbit() {
 
         function layout(offset: number) {
             const step = path.perimeter / cards.length
-            // Subtracting the index puts 3♠ at the front of the queue, so the deck
-            // streams past in ascending Thirteen order and 2♥ brings up the rear.
+            // Subtracting the index puts 3 of spades at the front of the queue, so the deck
+            // streams past in ascending Thirteen order and 2 of hearts brings up the rear.
             cards.forEach((el, i) => {
                 const [x, y] = pointOn(path, offset - i * step)
                 el.style.transform = `translate(${x}px, ${y}px) scale(${scale})`

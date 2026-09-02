@@ -1,11 +1,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600&display=swap');
 
 :root {
-    /* ── Layer 1: the card-room palette ──────────────────────
-       Literal values. Components never reference these directly —
+    /* Layer 1: the card-room palette
+       Literal values. Components never reference these directly -
        draw from them when mapping the semantic layer below. */
 
-    /* Felt — the table itself, dark to light */
+    /* Felt - the table itself, dark to light */
     --felt-950: #04170f;
     --felt-900: #072b1e;
     --felt-800: #0b3d2c;
@@ -17,29 +17,29 @@
     --felt-200: #9dbfae;
     --felt-100: #cfe2d8;
 
-    /* Brass — the single accent metal */
+    /* Brass - the single accent metal */
     --brass-700: #8a6a1d;
     --brass-600: #a8811f;
     --brass-500: #d4a437;
     --brass-400: #e8c25f;
     --brass-300: #f2dca0;
 
-    /* Claret — card backs and deep reds */
+    /* Claret - card backs and deep reds */
     --claret-700: #5c0f18;
     --claret-600: #7a1420;
     --claret-500: #9e1c2b;
 
-    /* Parchment — text and card faces */
+    /* Parchment - text and card faces */
     --cream-50: #faf8f2;
     --cream-100: #f4f1e8;
     --cream-200: #e2dccb;
 
-    /* Signal — errors only, kept away from claret so a failed
+    /* Signal - errors only, kept away from claret so a failed
        login never reads as decoration */
     --signal-500: #d64545;
     --signal-300: #ff8a8a;
 
-    /* ── Layer 2: semantic tokens ────────────────────────────
+    /* Layer 2: semantic tokens
        The only colours components use. Remap these to retheme;
        nothing below this block changes. */
     --bg: var(--felt-800);
@@ -53,7 +53,7 @@
     --focus-hover: var(--brass-400);
     --danger: var(--signal-300);
 
-    /* ── Layer 3: hooks read by @magmacrunch/adenosine-cards ──
+    /* Layer 3: hooks read by @magmacrunch/adenosine-cards
        No effect until the deck is installed; the library reads
        these off any ancestor of a .card element. */
     --card-back-bg: var(--claret-600);
@@ -100,7 +100,7 @@ body {
     color: var(--text);
 }
 
-/* Card orbit — all 52, in Thirteen order, circling the page under the header.
+/* Card orbit - all 52, in Thirteen order, circling the page under the header.
    Positions come from CardOrbit.tsx; this only sets the stage. */
 
 .orbit {
