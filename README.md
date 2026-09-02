@@ -73,3 +73,21 @@ cd ../backend
 # 4. Run it
 java25 -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
+
+---
+
+## Licences
+
+Card artwork from [`@magmacrunch/adenosine-cards`](https://magmacrunch.com/ware/adenosine/)
+v0.8.0, under Apache-2.0. The licence requires this NOTICE to ship with any build:
+
+```
+Adenosine
+Copyright 2026 Magma Crunch Media
+
+This product includes software developed by Magma Crunch Media
+(https://magmacrunch.com).
+
+Adenosine is a collection of lightweight web game engines:
+https://github.com/magmacrunchmedia/adenosine
+```
