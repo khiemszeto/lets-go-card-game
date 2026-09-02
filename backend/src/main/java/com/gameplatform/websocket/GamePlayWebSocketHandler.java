@@ -1,7 +1,5 @@
 package com.gameplatform.websocket;
 
-import com.gameplatform.dto.CreatePlayerResponseDto;
-import com.gameplatform.exception.ResourceNotFoundException;
 import com.gameplatform.game.Room;
 import com.gameplatform.service.GameService;
 import com.gameplatform.service.LobbyService;
@@ -13,6 +11,9 @@ import com.gameplatform.websocket.dto.outbound.lobby.RoomStateMessageDto;
 import com.gameplatform.websocket.dto.outbound.system.PongMessageDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtException;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.socket.CloseStatus;
@@ -44,8 +45,6 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
     private final SessionRegistry sessionRegistry;
 
-    private AuthPlayerService authPlayerService;
-
     private ObjectMapper objectMapper;
 
     private LobbyService lobbyService;
@@ -54,19 +53,22 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
     private RoomNotifier roomNotifier;
 
+    private JwtDecoder jwtDecoder;
+
     public GamePlayWebSocketHandler(SessionRegistry sessionRegistry,
                                     AuthPlayerService authPlayerService,
                                     LobbyService lobbyService,
                                     GameService gameService,
                                     ObjectMapper objectMapper,
-                                    RoomNotifier roomNotifier
+                                    RoomNotifier roomNotifier,
+                                            JwtDecoder jwtDecoder
     ) {
         this.sessionRegistry = sessionRegistry;
-        this.authPlayerService = authPlayerService;
         this.objectMapper = objectMapper;
         this.lobbyService = lobbyService;
         this.roomNotifier = roomNotifier;
         this.gameService = gameService;
+        this.jwtDecoder = jwtDecoder;
     }
 
 
@@ -81,38 +83,32 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
         MultiValueMap<String, String> params =
                 UriComponentsBuilder.fromUri(uri).build().getQueryParams();
 
-        String playerIdString = params.getFirst("playerId");
+        String token = params.getFirst("token");
 
-        if (playerIdString == null || playerIdString.isBlank()) {
-            session.close(CloseStatus.BAD_DATA.withReason("Missing playerId"));
+        if (token == null || token.isBlank()) {
+            session.close(CloseStatus.BAD_DATA.withReason("Missing token"));
             return;
         }
 
-        Long playerId;
         try {
-            playerId = Long.parseLong(playerIdString.trim());
-        }catch (NumberFormatException e) {
-            session.close(CloseStatus.BAD_DATA.withReason("Invalid playerId"));
-            return;
+            Jwt jwt = jwtDecoder.decode(token);
+            Number id = jwt.getClaim("playerId");
+            if (id == null) {
+                session.close(CloseStatus.BAD_DATA.withReason("Missing playerId claim"));
+                return;
+            }
+            Long playerId = id.longValue();
+            String username = jwt.getSubject();
+            session.getAttributes().put("playerId", playerId);
+            session.getAttributes().put("username", username);
+            sessionRegistry.add(session, playerId);
+            log.info("WebSocket connected: player {} ({}) — {} online",
+                    username, playerId, sessionRegistry.count());
+            sessionRegistry.send(session, new TextMessage("welcome " + session.getId()));
+            sessionRegistry.broadcast("online " + sessionRegistry.count());
+        } catch (JwtException e) {
+            session.close(CloseStatus.BAD_DATA.withReason("Invalid token"));
         }
-
-        CreatePlayerResponseDto player;
-        try {
-            player = authPlayerService.getPlayer(playerId);
-        } catch (ResourceNotFoundException e) {
-            session.close(CloseStatus.BAD_DATA.withReason("Invalid playerId"));
-            return;
-        }
-
-        session.getAttributes().put("playerId", playerId);
-        session.getAttributes().put("username", player.getUsername());
-
-        // update map to remember this new connected section
-        sessionRegistry.add(session, playerId);
-        log.info("WebSocket connected: player {} ({}) — {} online",
-                player.getUsername(), player.getId(), sessionRegistry.count());
-        sessionRegistry.send(session, new TextMessage("welcome " + session.getId()));
-        sessionRegistry.broadcast("online " + sessionRegistry.count());
     }
 
     @Override
@@ -167,10 +163,10 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
                     return;
                 }
 
-                UUID roomUUID;
+                Integer roomID;
 
                 try {
-                    roomUUID = UUID.fromString(roomId);
+                    roomID = Integer.parseInt(roomId);
                 } catch (IllegalArgumentException e) {
                     ErrorMessageDto errorMessageDto = new ErrorMessageDto();
                     errorMessageDto.setMessage("Json invalid bro !!");
@@ -179,9 +175,9 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
                 }
 
                 // expect RoomStateMessageDt in happy path, BUT ErrorMessageDto in case of error
-                Object messageDto = lobbyService.joinRoom(playerId, username, roomUUID);
+                Object messageDto = lobbyService.joinRoom(playerId, username, roomID);
                 if (messageDto instanceof RoomStateMessageDto roomStateMessageDto) {
-                    Room room = lobbyService.getRoomByUUID(roomUUID);
+                    Room room = lobbyService.getRoomById(roomID);
                     roomNotifier.sendToRoom(room, roomStateMessageDto);
                 } else {
                     sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
@@ -198,7 +194,7 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
                 if (messageDto instanceof RoomStateMessageDto roomStateMessageDto) {
                     String roomId = roomStateMessageDto.getRoomId();
-                    Room room = lobbyService.getRoomByUUID(UUID.fromString(roomId));
+                    Room room = lobbyService.getRoomById(Integer.parseInt(roomId));
                     roomNotifier.sendToRoom(room, roomStateMessageDto);
                 } else {
                     sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
@@ -213,7 +209,7 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
                 if (messageDto instanceof RoomStateMessageDto roomStateMessageDto) {
                     String roomId = roomStateMessageDto.getRoomId();
-                    Room room = lobbyService.getRoomByUUID(UUID.fromString(roomId));
+                    Room room = lobbyService.getRoomById(Integer.parseInt(roomId));
                     roomNotifier.sendToRoom(room, roomStateMessageDto);
                 } else {
                     sessionRegistry.send(session, new TextMessage(objectMapper.writeValueAsString(messageDto)));
@@ -227,7 +223,7 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
                 if (messageDto instanceof LeftRoomMessageDto leftRoomMessageDto) {
                     String roomId = leftRoomMessageDto.getRoomId();
-                    Room room = lobbyService.getRoomByUUID(UUID.fromString(roomId));
+                    Room room = lobbyService.getRoomById(Integer.parseInt(roomId));
 
                     if (room != null && !room.isStarted()) {
                         RoomStateMessageDto roomStateMessageDto = lobbyService.buildRoomState(room);

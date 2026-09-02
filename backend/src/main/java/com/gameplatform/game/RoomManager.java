@@ -4,15 +4,15 @@ import org.springframework.stereotype.Component;
 
 
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+
+
 
 @Component
 public class RoomManager {
-
-    private Map<UUID, Room> rooms ;
-
-    private Map<Long, UUID> playerToRoom ;
+    private static final int MAX_ROOMS = 100;
+    private Map<Integer, Room> rooms ;
+    private Map<Long, Integer> playerToRoom ;
 
     public enum JoinStatus {
         SUCCESS,
@@ -26,30 +26,34 @@ public class RoomManager {
         this.playerToRoom = new ConcurrentHashMap<>();
     }
 
-    public Room getRoom(UUID roomId) {
+    public Room getRoom(Integer roomId) {
         return rooms.get(roomId);
     }
 
     public Room getRoomForPlayer(Long playerId) {
         if (playerToRoom.containsKey(playerId)) {
-            UUID roomId = playerToRoom.get(playerId);
+            Integer roomId = playerToRoom.get(playerId);
             return rooms.get(roomId);
         }
         return null;
     }
 
-    public UUID createRoom(Long playerId, String playerName) {
+    public Integer createRoom(Long playerId, String playerName) {
         if (playerToRoom.containsKey(playerId)) return null;
+        if (rooms.size() >= MAX_ROOMS) return null;
 
-        Room room = new Room();
+        Integer roomId = findFreeRoomId();
+        if (roomId == null) return null;
+
+        Room room = new Room(roomId);
         room.addPlayer(playerId, playerName);
-        rooms.put(room.getId(), room);
-        playerToRoom.put(playerId, room.getId());
+        rooms.put(roomId, room);
+        playerToRoom.put(playerId, roomId);
 
-        return room.getId();
+        return roomId;
     }
 
-    public JoinStatus joinRoom(Long playerId, String playerName, UUID roomId) {
+    public JoinStatus joinRoom(Long playerId, String playerName, Integer roomId) {
 
         if (playerToRoom.containsKey(playerId)) return JoinStatus.ALREADY_IN_ROOM;
         if (!rooms.containsKey(roomId)) return JoinStatus.ROOM_NOT_FOUND;
@@ -66,7 +70,7 @@ public class RoomManager {
 
     public void leaveRoom(Long playerId) {
         if (playerToRoom.containsKey(playerId)) {
-            UUID roomId = playerToRoom.get(playerId);
+            Integer roomId = playerToRoom.get(playerId);
             Room room = rooms.get(roomId);
             room.removePlayer(playerId);
             playerToRoom.remove(playerId);
@@ -81,7 +85,12 @@ public class RoomManager {
         return rooms.values();
     }
 
-
+    private Integer findFreeRoomId() {
+        for (int id = 1; id <= MAX_ROOMS; id++) {
+            if (!rooms.containsKey(id)) return id;
+        }
+        return null; // all 100 slots in use
+    }
 
 
 }

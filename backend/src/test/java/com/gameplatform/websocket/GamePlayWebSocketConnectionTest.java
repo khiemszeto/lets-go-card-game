@@ -9,11 +9,15 @@ import java.time.LocalDate;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import com.gameplatform.service.JwtService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
@@ -35,49 +39,67 @@ public class GamePlayWebSocketConnectionTest {
     @Autowired
     private AuthPlayerService authPlayerService;
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtService jwtService;
+
+    private record TestPlayer(String username, String password) {}
+
     @Test
     void clientConnectsAndIsAnsweredOverTheSocket() throws Exception {
-        BlockingQueue<String> alice = new LinkedBlockingQueue<>();
-        BlockingQueue<String> bob = new LinkedBlockingQueue<>();
+        BlockingQueue<String> aliceMessages = new LinkedBlockingQueue<>();
+        BlockingQueue<String> bobMessages = new LinkedBlockingQueue<>();
 
-        WebSocketSession aliceSession = connect(createPlayer().getId(), alice);
-        assertThat(alice.poll(5, SECONDS)).startsWith("welcome ");
-        assertThat(alice.poll(5, SECONDS)).isEqualTo("online 1");
+        TestPlayer alice = registerPlayer();
+        WebSocketSession aliceSession = connect(alice, aliceMessages);
+        assertThat(bobMessages.poll(5, SECONDS)).startsWith("welcome ");
+        assertThat(aliceMessages.poll(5, SECONDS)).isEqualTo("online 1");
+        TestPlayer bob = registerPlayer();
+        WebSocketSession bobSession = connect(bob, bobMessages);
+        assertThat(bobMessages.poll(5, SECONDS)).startsWith("welcome ");
+        assertThat(bobMessages.poll(5, SECONDS)).isEqualTo("online 2");
 
-        WebSocketSession bobSession = connect(createPlayer().getId(), bob);
-        assertThat(bob.poll(5, SECONDS)).startsWith("welcome ");
-        assertThat(bob.poll(5, SECONDS)).isEqualTo("online 2");
 
         // check if alice received the auto broadcast when new player has joined
-        assertThat(alice.poll(5, SECONDS)).isEqualTo("online 2");
+        assertThat(aliceMessages.poll(5, SECONDS)).isEqualTo("online 2");
 
         bobSession.sendMessage(new TextMessage("{\"type\":\"PING\"}"));
-        assertThat(bob.poll(5, SECONDS)).isEqualTo("{\"type\":\"PONG\"}");
+        assertThat(bobMessages.poll(5, SECONDS)).isEqualTo("{\"type\":\"PONG\"}");
 
         aliceSession.close();
         bobSession.close();
     }
     // Open a client side socket, with anonymous subclass of TextWebSocketHandler inline
-    private WebSocketSession connect(Long playerId, BlockingQueue<String> received) throws Exception {
+    private WebSocketSession connect(TestPlayer player, BlockingQueue<String> received) throws Exception {
+        String token = tokenFor(player);
         return new StandardWebSocketClient()
                 .execute(new TextWebSocketHandler() {
-                    // Override handler to receive server response
                     @Override
                     protected void handleTextMessage(WebSocketSession s, TextMessage message) {
                         received.add(message.getPayload());
                     }
-                }, "ws://localhost:" + port + "/ws?playerId=" + playerId)
+                }, "ws://localhost:" + port + "/ws?token=" + token)
                 .get(5, SECONDS);
     }
 
-    private CreatePlayerResponseDto createPlayer() {
+    private TestPlayer registerPlayer() {
         String unique = String.valueOf(System.nanoTime());
-
+        String username = "player" + unique;
+        String password = "password" + unique; // min 6 chars — satisfies validation
         CreatePlayerRequestDto request = new CreatePlayerRequestDto();
-        request.setUsername("player" + unique);
-        request.setPassword("password" + unique);
-        request.setEmail("player" + unique + "@mailinator.com");
-        request.setBirthDate(LocalDate.of(2000, 1, 1));
-        return authPlayerService.createPlayer(request);
+        request.setUsername(username);
+        request.setPassword(password);
+        request.setEmail(username + "@mailinator.com");
+        authPlayerService.createPlayer(request);
+        return new TestPlayer(username, password);
+    }
+
+    private String tokenFor(TestPlayer player) {
+        Authentication auth = authenticationManager.authenticate(
+                UsernamePasswordAuthenticationToken.unauthenticated(
+                        player.username(), player.password()));
+        return jwtService.generateToken(auth);
     }
 }

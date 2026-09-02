@@ -85,7 +85,7 @@ public class GameService {
         // Empty hand = game over
         if (hand.isEmpty()) {
             PlayResultMessageDto playResult = new PlayResultMessageDto();
-            playResult.setRoomId(room.getId().toString());
+            playResult.setRoomId(room.getRoomId().toString());
             playResult.setPlayerId(playerId);
             playResult.setCardsPlayed(cardDtos);
             playResult.setCurrentPlayerId(room.getCurrentTurnPlayerId());
@@ -95,7 +95,7 @@ public class GameService {
             roomNotifier.sendToRoom(room, playResult);
 
             GameOverMessageDto gameOver = new GameOverMessageDto();
-            gameOver.setRoomId(room.getId().toString());
+            gameOver.setRoomId(room.getRoomId().toString());
             gameOver.setWinnerId(playerId);
 
 
@@ -109,7 +109,7 @@ public class GameService {
             roomNotifier.sendToRoom(room, gameOver);
             room.resetToWaiting();
 
-            UUID roomId = room.getId();
+            Integer roomId = room.getRoomId();
             taskScheduler.schedule(() -> {
                 Room r = roomManager.getRoom(roomId);
                 if (r == null || !r.isWaiting()) return; // left or already rematching
@@ -123,7 +123,7 @@ public class GameService {
 
         // Public the PLAY_RESULT
         PlayResultMessageDto playResult = new PlayResultMessageDto();
-        playResult.setRoomId(room.getId().toString());
+        playResult.setRoomId(room.getRoomId().toString());
         playResult.setPlayerId(playerId);
         playResult.setCardsPlayed(cardDtos);
         playResult.setCurrentPlayerId(room.getCurrentTurnPlayerId());
@@ -135,7 +135,7 @@ public class GameService {
 
         // Private update hand to the player
         HandMessageDto handMessageDto = new HandMessageDto();
-        handMessageDto.setRoomId(room.getId().toString());
+        handMessageDto.setRoomId(room.getRoomId().toString());
         handMessageDto.setCards(mapToCardDtos(hand));
         roomNotifier.sendToPlayer(playerId, handMessageDto);
 
@@ -167,7 +167,7 @@ public class GameService {
         }
 
         PassResultMessageDto passResult = new PassResultMessageDto();
-        passResult.setRoomId(room.getId().toString());
+        passResult.setRoomId(room.getRoomId().toString());
         passResult.setPlayerId(playerId);
         passResult.setCurrentPlayerId(room.getCurrentTurnPlayerId());
         passResult.setTrickReset(trickReset);
@@ -266,7 +266,7 @@ public class GameService {
 
             if (winnerId != null) {
                 GameOverMessageDto gameOver = new GameOverMessageDto();
-                gameOver.setRoomId(room.getId().toString());
+                gameOver.setRoomId(room.getRoomId().toString());
                 gameOver.setWinnerId(winnerId);
 
                 // use this to settle the score aftermatch
@@ -276,12 +276,12 @@ public class GameService {
                 roomNotifier.sendToRoom(room, gameOver);
 
                 LeftRoomMessageDto leftRoomMessageDto = new LeftRoomMessageDto();
-                leftRoomMessageDto.setRoomId(room.getId().toString());
+                leftRoomMessageDto.setRoomId(room.getRoomId().toString());
                 leftRoomMessageDto.setType("LEAVE_ROOM");
 
                 room.resetToWaiting();
 
-                UUID roomId = room.getId();
+                Integer roomId = room.getRoomId();
                 taskScheduler.schedule(() -> {
                     Room r = roomManager.getRoom(roomId);
                     if (r == null || !r.isWaiting()) return; // left or already rematching
@@ -291,7 +291,7 @@ public class GameService {
                 return leftRoomMessageDto;
             } else {
                 LeftRoomMessageDto leftRoomMessageDto = new LeftRoomMessageDto();
-                leftRoomMessageDto.setRoomId(room.getId().toString());
+                leftRoomMessageDto.setRoomId(room.getRoomId().toString());
                 leftRoomMessageDto.setType("LEAVE_ROOM");
                 return leftRoomMessageDto;
             }
@@ -302,11 +302,11 @@ public class GameService {
                 room.setCurrentTurnPlayerId(freeLeadInheritId);
 
                 LeftRoomMessageDto leftRoomMessageDto = new LeftRoomMessageDto();
-                leftRoomMessageDto.setRoomId(room.getId().toString());
+                leftRoomMessageDto.setRoomId(room.getRoomId().toString());
                 leftRoomMessageDto.setType("LEAVE_ROOM");
 
                 LeftDuringGameMessageDto leftDuringGameMessageDto = new LeftDuringGameMessageDto();
-                leftDuringGameMessageDto.setRoomId(room.getId().toString());
+                leftDuringGameMessageDto.setRoomId(room.getRoomId().toString());
                 leftDuringGameMessageDto.setLeftPlayerId(playerId);
                 leftDuringGameMessageDto.setLeftPlayerUsername(username);
                 leftDuringGameMessageDto.setCurrentPlayerId(freeLeadInheritId);
@@ -336,7 +336,7 @@ public class GameService {
                     room.setCurrentTurnPlayerId(newTrickPlayerId);
 
                     LeftDuringGameMessageDto leftDuringGameMessageDto = new LeftDuringGameMessageDto();
-                    leftDuringGameMessageDto.setRoomId(room.getId().toString());
+                    leftDuringGameMessageDto.setRoomId(room.getRoomId().toString());
                     leftDuringGameMessageDto.setLeftPlayerId(playerId);
                     leftDuringGameMessageDto.setLeftPlayerUsername(username);
                     leftDuringGameMessageDto.setCurrentPlayerId(newTrickPlayerId);
@@ -350,7 +350,7 @@ public class GameService {
                     room.setCurrentTurnPlayerId(nextPlayerId);
 
                     LeftDuringGameMessageDto leftDuringGameMessageDto = new LeftDuringGameMessageDto();
-                    leftDuringGameMessageDto.setRoomId(room.getId().toString());
+                    leftDuringGameMessageDto.setRoomId(room.getRoomId().toString());
                     leftDuringGameMessageDto.setLeftPlayerId(playerId);
                     leftDuringGameMessageDto.setLeftPlayerUsername(username);
                     leftDuringGameMessageDto.setCurrentPlayerId(nextPlayerId);
@@ -362,7 +362,7 @@ public class GameService {
                 }
 
                 LeftRoomMessageDto leftRoomMessageDto = new LeftRoomMessageDto();
-                leftRoomMessageDto.setRoomId(room.getId().toString());
+                leftRoomMessageDto.setRoomId(room.getRoomId().toString());
                 leftRoomMessageDto.setType("LEAVE_ROOM");
 
                 return leftRoomMessageDto;
@@ -375,7 +375,7 @@ public class GameService {
                 }
 
                 LeftDuringGameMessageDto leftDuringGameMessageDto = new LeftDuringGameMessageDto();
-                leftDuringGameMessageDto.setRoomId(room.getId().toString());
+                leftDuringGameMessageDto.setRoomId(room.getRoomId().toString());
                 leftDuringGameMessageDto.setLeftPlayerId(playerId);
                 leftDuringGameMessageDto.setLeftPlayerUsername(username);
                 leftDuringGameMessageDto.setCurrentPlayerId(room.getCurrentTurnPlayerId());
@@ -386,7 +386,7 @@ public class GameService {
 
 
                 LeftRoomMessageDto leftRoomMessageDto = new LeftRoomMessageDto();
-                leftRoomMessageDto.setRoomId(room.getId().toString());
+                leftRoomMessageDto.setRoomId(room.getRoomId().toString());
                 leftRoomMessageDto.setType("LEAVE_ROOM");
 
                 return leftRoomMessageDto;
