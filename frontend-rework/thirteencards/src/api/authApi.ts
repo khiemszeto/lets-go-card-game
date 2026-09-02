@@ -7,8 +7,6 @@ async function readError(res: Response): Promise<string> {
     }catch {
         return (await res.text()) || 'Request failed'
     }
-
-
 }
 
 export async function loginPlayer(body: LoginRequest) : Promise<LoginResponse> {

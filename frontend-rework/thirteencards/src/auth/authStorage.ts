@@ -13,3 +13,6 @@ export function clearAuth() {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USERNAME_KEY)
 }
+export function getUsername() {
+    return localStorage.getItem(USERNAME_KEY)
+}
