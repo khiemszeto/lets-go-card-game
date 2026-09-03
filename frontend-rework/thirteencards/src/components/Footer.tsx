@@ -1,6 +1,6 @@
 function Footer() {
     return (
-        <footer className="py-6 text-center text-sm text-muted">
+        <footer className="site-footer py-6 text-center text-sm text-muted">
             Thirteen Cards · local dev
         </footer>
     )

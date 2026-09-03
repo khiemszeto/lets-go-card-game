@@ -39,4 +39,8 @@ public class CustomUserDetails implements UserDetails {
     public Long getPlayerId() {
         return player.getId();
     }
+
+    public Long getBalance() {
+        return player.getBalance();
+    }
 }

@@ -306,8 +306,6 @@ public class LobbyService {
         for (Long playerId: players) {
             List<Card> hand = room.getHand(playerId);
 
-
-
             HandMessageDto handMessageDto = new HandMessageDto();
             handMessageDto.setRoomId(roomId.toString());
 

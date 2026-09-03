@@ -32,3 +32,58 @@ export interface LeaveRoomMessage {
     type: 'LEAVE_ROOM'
     roomId: string
 }
+
+export interface CountDownMessage {
+    type: 'COUNTDOWN';
+    roomId: string;
+    seconds: number;
+}
+
+export interface Card {
+    suit: 'SPADES' | 'HEARTS' | 'DIAMONDS' | 'CLUBS';
+    rank: 'THREE' | 'FOUR' | 'FIVE' | 'SIX' | 'SEVEN' | 'EIGHT' | 'NINE' | 'TEN' | 'JACK' | 'QUEEN' | 'KING' | 'ACE' | 'TWO';
+}
+
+export interface GameStartMessage {
+    type: 'GAME_START';
+    roomId: string;
+    players: RoomPlayer[];
+    currentPlayerId: number;
+}
+
+export interface HandMessage {
+    type: 'HAND'
+    roomId: string
+    cards: Card[]
+}
+export interface PlayResultMessage {
+    type: 'PLAY_RESULT'
+    roomId: string
+    playerId: number
+    currentPlayerId: number
+    players: RoomPlayer[]
+    trickReset: boolean
+    cardsPlayed: Card[]
+}
+export interface PassResultMessage {
+    type: 'PASS_RESULT'
+    roomId: string
+    playerId: number
+    currentPlayerId: number
+    trickReset: boolean
+}
+export interface GameOverMessage {
+    type: 'GAME_OVER'
+    roomId: string
+    winnerId: number
+}
+export interface LeftDuringGameMessage {
+    type: 'LEFT_DURING_GAME'
+    roomId: string
+    leftPlayerId: number
+    leftPlayerUsername: string
+    currentPlayerId: number
+    players: RoomPlayer[]
+    trickReset: boolean
+    autoPassed: boolean
+}

@@ -55,7 +55,7 @@ public class SecurityConfig {
                 .authenticationProvider(daoAuthenticationProvider)
                 .authorizeHttpRequests(
                         auth ->
-                                auth.requestMatchers("/api/players/register", "/login", "/ws").permitAll()
+                                auth.requestMatchers("/api/players", "/login", "/ws").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .sessionManagement(

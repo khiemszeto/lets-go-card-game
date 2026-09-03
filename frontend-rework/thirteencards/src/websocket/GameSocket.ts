@@ -53,8 +53,13 @@ export class GameSocket {
     public createRoom() {this.send({type: "CREATE_ROOM"})}
     public joinRoom(roomId: string) { this.send({ type: 'JOIN_ROOM', roomId }) }
     public leaveRoom() { this.send({ type: 'LEAVE_ROOM' }) }
+    public leaveDuringGame() { this.send({ type: 'LEAVE_DURING_GAME' }) }
     public ready() { this.send({ type: 'READY' }) }
     public notReady() { this.send({ type: 'NOT_READY' }) }
+    public play(cards: { suit: string; rank: string }[]) {
+        this.send({ type: 'PLAY', cards })
+    }
+    public pass() { this.send({ type: 'PASS' }) }
 
     public disconnect() {
         this.websocket?.close()
