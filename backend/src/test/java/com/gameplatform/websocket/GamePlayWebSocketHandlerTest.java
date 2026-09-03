@@ -8,13 +8,13 @@ import static org.mockito.Mockito.when;
 import java.net.URI;
 import java.util.HashMap;
 
-import com.gameplatform.dto.CreatePlayerResponseDto;
-import com.gameplatform.exception.ResourceNotFoundException;
 import com.gameplatform.service.GameService;
 import com.gameplatform.service.LobbyService;
 import com.gameplatform.service.AuthPlayerService;
 import com.gameplatform.websocket.dto.common.ErrorMessageDto;
 import org.junit.jupiter.api.Test;
+import org.springframework.security.oauth2.jwt.BadJwtException;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
@@ -23,15 +23,15 @@ import tools.jackson.databind.ObjectMapper;
 
 public class GamePlayWebSocketHandlerTest {
 
-    private final AuthPlayerService authPlayerService = mock(AuthPlayerService.class);
     private final SessionRegistry sessionRegistry = new SessionRegistry();
     private ObjectMapper objectMapper = new ObjectMapper();
     private final LobbyService lobbyService = mock(LobbyService.class);
     private final GameService gameService = mock(GameService.class);
     private final RoomNotifier roomNotifier = mock(RoomNotifier.class);
     private final JwtDecoder jwtDecoder = mock(JwtDecoder.class);
+    // the handler still takes AuthPlayerService but no longer uses it, so a bare mock will do
     private final GamePlayWebSocketHandler handler = new GamePlayWebSocketHandler(
-            sessionRegistry, authPlayerService, lobbyService, gameService, objectMapper, roomNotifier, jwtDecoder);
+            sessionRegistry, mock(AuthPlayerService.class), lobbyService, gameService, objectMapper, roomNotifier, jwtDecoder);
 
     @Test
     void connectionSendsWelcomeAndOnlineCount() throws Exception {
@@ -44,16 +44,16 @@ public class GamePlayWebSocketHandlerTest {
     }
 
     @Test
-    void unknownPlayerIsRejected() throws Exception {
+    void badTokenIsRejected() throws Exception {
         WebSocketSession session = mock(WebSocketSession.class);
         when(session.getId()).thenReturn("s1");
         when(session.isOpen()).thenReturn(true);
-        when(session.getUri()).thenReturn(URI.create("ws://localhost/ws?playerId=99"));
-        when(authPlayerService.getPlayer(99L)).thenThrow(new ResourceNotFoundException("nope"));
+        when(session.getUri()).thenReturn(URI.create("ws://localhost/ws?token=nope"));
+        when(jwtDecoder.decode("nope")).thenThrow(new BadJwtException("bad signature"));
 
         handler.afterConnectionEstablished(session);
 
-        verify(session).close(CloseStatus.BAD_DATA.withReason("Invalid playerId"));
+        verify(session).close(CloseStatus.BAD_DATA.withReason("Invalid token"));
         assertThat(sessionRegistry.count()).isZero();
     }
 
@@ -90,16 +90,21 @@ public class GamePlayWebSocketHandlerTest {
     }
 
     private WebSocketSession openSession(String id, Long playerId) {
+        String token = "token-" + playerId;
+
         WebSocketSession session = mock(WebSocketSession.class);
         when(session.getId()).thenReturn(id);
         when(session.isOpen()).thenReturn(true);
-        when(session.getUri()).thenReturn(URI.create("ws://localhost/ws?playerId=" + playerId));
+        when(session.getUri()).thenReturn(URI.create("ws://localhost/ws?token=" + token));
         when(session.getAttributes()).thenReturn(new HashMap<>());
 
-        CreatePlayerResponseDto player = new CreatePlayerResponseDto();
-        player.setId(playerId);
-        player.setUsername("player" + playerId);
-        when(authPlayerService.getPlayer(playerId)).thenReturn(player);
+        // the handler reads the player off the token instead of a query param now
+        Jwt jwt = Jwt.withTokenValue(token)
+                .header("alg", "HS256")
+                .subject("player" + playerId)
+                .claim("playerId", playerId)
+                .build();
+        when(jwtDecoder.decode(token)).thenReturn(jwt);
 
         return session;
     }

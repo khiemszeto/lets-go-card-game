@@ -54,7 +54,7 @@ public class GamePlayWebSocketConnectionTest {
 
         TestPlayer alice = registerPlayer();
         WebSocketSession aliceSession = connect(alice, aliceMessages);
-        assertThat(bobMessages.poll(5, SECONDS)).startsWith("welcome ");
+        assertThat(aliceMessages.poll(5, SECONDS)).startsWith("welcome ");
         assertThat(aliceMessages.poll(5, SECONDS)).isEqualTo("online 1");
         TestPlayer bob = registerPlayer();
         WebSocketSession bobSession = connect(bob, bobMessages);
