@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Primary;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 public class Player {
@@ -22,6 +24,9 @@ public class Player {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Boolean deleted;
+
+    @ManyToMany(mappedBy = "players")
+    private Set<GameHistory> gameHistories = new HashSet<>();
 
     public Boolean getDeleted() {
         return deleted;
