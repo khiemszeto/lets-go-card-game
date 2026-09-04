@@ -1,6 +1,6 @@
 import {  useState, type FormEvent } from 'react'
 import { loginPlayer } from '../api/authApi'
-import { saveAuth } from '../auth/authStorage'
+import { saveSession } from '../auth/authStorage'
 
 
 type Props = {
@@ -21,8 +21,8 @@ function LoginPage({onGoRegister, onSuccess} : Props) {
         setError(null)
         setLoading(true)
         try {
-            const { accessToken, balance } = await loginPlayer({ username, password })
-            saveAuth(accessToken, username, balance)
+            const { username : name, balance } = await loginPlayer({ username, password })
+            saveSession(name, balance)
             onSuccess()
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Login failed')

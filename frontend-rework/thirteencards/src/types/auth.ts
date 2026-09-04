@@ -4,7 +4,7 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
+username: string;
   balance: number;
 }
 
@@ -19,4 +19,9 @@ export interface RegisterResponse {
     username: string
     balance: number
     createdAt: string
+}
+
+export interface MeResponse {
+    username: string
+    balance: number
 }

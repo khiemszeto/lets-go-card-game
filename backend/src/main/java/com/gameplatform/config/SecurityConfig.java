@@ -1,5 +1,6 @@
 package com.gameplatform.config;
 
+import com.gameplatform.security.CookieBearerTokenResolver;
 import com.gameplatform.service.CustomUserDetailsService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -55,15 +56,15 @@ public class SecurityConfig {
                 .authenticationProvider(daoAuthenticationProvider)
                 .authorizeHttpRequests(
                         auth ->
-                                auth.requestMatchers("/api/players", "/login", "/ws").permitAll()
+                                auth.requestMatchers("/api/players", "/login", "/ws", "/logout").permitAll()
                                         .anyRequest().authenticated()
                 )
                 .sessionManagement(
                         session ->
                                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .oauth2ResourceServer(oauth2
-                        -> oauth2.jwt(jwt ->
-                        jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .bearerTokenResolver(new CookieBearerTokenResolver())
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)))
 
         ;
 

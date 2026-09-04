@@ -5,6 +5,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
+import java.net.URI;
 import java.time.LocalDate;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -15,10 +16,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.socket.TextMessage;
+import org.springframework.web.socket.WebSocketHttpHeaders;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.client.standard.StandardWebSocketClient;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
@@ -71,16 +74,23 @@ public class GamePlayWebSocketConnectionTest {
         aliceSession.close();
         bobSession.close();
     }
+
     // Open a client side socket, with anonymous subclass of TextWebSocketHandler inline
     private WebSocketSession connect(TestPlayer player, BlockingQueue<String> received) throws Exception {
         String token = tokenFor(player);
+
+        WebSocketHttpHeaders headers = new WebSocketHttpHeaders();
+        headers.add(HttpHeaders.COOKIE, "ACCESS_TOKEN=" + token);
+
         return new StandardWebSocketClient()
                 .execute(new TextWebSocketHandler() {
                     @Override
                     protected void handleTextMessage(WebSocketSession s, TextMessage message) {
                         received.add(message.getPayload());
                     }
-                }, "ws://localhost:" + port + "/ws?token=" + token)
+                },
+                        headers,
+                        URI.create("ws://localhost:" + port + "/ws"))
                 .get(5, SECONDS);
     }
 
