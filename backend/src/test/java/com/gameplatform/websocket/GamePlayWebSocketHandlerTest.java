@@ -1,6 +1,7 @@
 package com.gameplatform.websocket;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,7 +16,11 @@ import com.gameplatform.service.LobbyService;
 import com.gameplatform.service.AuthPlayerService;
 import com.gameplatform.websocket.dto.common.ErrorMessageDto;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpHeaders;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -48,12 +53,12 @@ public class GamePlayWebSocketHandlerTest {
         WebSocketSession session = mock(WebSocketSession.class);
         when(session.getId()).thenReturn("s1");
         when(session.isOpen()).thenReturn(true);
-        when(session.getUri()).thenReturn(URI.create("ws://localhost/ws?playerId=99"));
-        when(authPlayerService.getPlayer(99L)).thenThrow(new ResourceNotFoundException("nope"));
+        when(session.getHandshakeHeaders()).thenReturn(new HttpHeaders());
+        when(session.getAttributes()).thenReturn(new HashMap<>());
 
         handler.afterConnectionEstablished(session);
 
-        verify(session).close(CloseStatus.BAD_DATA.withReason("Invalid playerId"));
+        verify(session).close(CloseStatus.BAD_DATA.withReason("Missing token"));
         assertThat(sessionRegistry.count()).isZero();
     }
 
@@ -91,15 +96,21 @@ public class GamePlayWebSocketHandlerTest {
 
     private WebSocketSession openSession(String id, Long playerId) {
         WebSocketSession session = mock(WebSocketSession.class);
+
         when(session.getId()).thenReturn(id);
         when(session.isOpen()).thenReturn(true);
-        when(session.getUri()).thenReturn(URI.create("ws://localhost/ws?playerId=" + playerId));
         when(session.getAttributes()).thenReturn(new HashMap<>());
 
-        CreatePlayerResponseDto player = new CreatePlayerResponseDto();
-        player.setId(playerId);
-        player.setUsername("player" + playerId);
-        when(authPlayerService.getPlayer(playerId)).thenReturn(player);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.COOKIE, "ACCESS_TOKEN=fake-jwt-for-" + playerId);
+        when(session.getHandshakeHeaders()).thenReturn(headers);
+
+        Jwt jwt = Jwt.withTokenValue("fake")
+                .header("alg", "none")
+                .subject("player" + playerId)
+                .claim("playerId", playerId)
+                .build();
+        when(jwtDecoder.decode(anyString())).thenReturn(jwt);
 
         return session;
     }

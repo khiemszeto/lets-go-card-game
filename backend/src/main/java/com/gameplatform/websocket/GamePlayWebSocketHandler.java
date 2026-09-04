@@ -11,6 +11,7 @@ import com.gameplatform.websocket.dto.outbound.lobby.RoomStateMessageDto;
 import com.gameplatform.websocket.dto.outbound.system.PongMessageDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -26,6 +27,7 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -74,16 +76,9 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws IOException {
-        URI uri = session.getUri();
-        if (uri == null) {
-            session.close(CloseStatus.BAD_DATA.withReason("Missing URI"));
-            return;
-        }
 
-        MultiValueMap<String, String> params =
-                UriComponentsBuilder.fromUri(uri).build().getQueryParams();
 
-        String token = params.getFirst("token");
+        String token = extractAccessToken(session);
 
         if (token == null || token.isBlank()) {
             session.close(CloseStatus.BAD_DATA.withReason("Missing token"));
@@ -314,4 +309,25 @@ public class GamePlayWebSocketHandler extends TextWebSocketHandler {
             sessionRegistry.remove(session);
         }
     }
+
+    private String extractAccessToken(WebSocketSession session) {
+        // 1) extract jwt from cookie header
+        List<String> cookieHeaders = session.getHandshakeHeaders().get(HttpHeaders.COOKIE);
+        if (cookieHeaders != null) {
+            for (String header : cookieHeaders) {
+                // header dạng: "ACCESS_TOKEN=eyJ...; other=..."
+                for (String part : header.split(";")) {
+                    String trimmed = part.trim();
+                    if (trimmed.startsWith("ACCESS_TOKEN=")) {
+                        String value = trimmed.substring("ACCESS_TOKEN=".length());
+                        if (!value.isBlank()) {
+                            return value;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
 }
+

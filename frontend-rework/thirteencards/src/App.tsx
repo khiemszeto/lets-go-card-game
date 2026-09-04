@@ -5,12 +5,15 @@ import RegisterPage from './pages/RegisterPage'
 import LobbyPage from './pages/LobbyPage'
 import Footer from './components/Footer'
 import LandscapeGate from './components/LandscapeGate'
-import { getAccessToken, getUsername, getBalance, clearAuth } from './auth/authStorage'
+import { saveSession, getUsername, getBalance, clearSession } from './auth/authStorage'
+import { fetchMe, logoutPlayer } from './api/authApi'
 
 // Shared lock name — every tab uses the same string so the browser knows they compete
 const GAME_TAB_LOCK = 'thirteencards-game'
 
 type AuthScreen = 'login' | 'register'
+
+type AuthStatus = 'loading' | 'anonymous' | 'authenticated'
 
 // Tab lock lifecycle for logged-in users:
 //   pending  → waiting to acquire the game lock (show "Connecting…")
@@ -25,11 +28,11 @@ function App() {
     // Bumped on login/logout and on storage events so effects re-run and re-read localStorage
     const [sessionTick, setSessionTick] = useState(0)
 
+    const [authStatus, setAuthStatus] = useState<AuthStatus>('loading')
+    const isLoggedIn = (authStatus === 'authenticated')
+
     // Increments on each lock attempt; stale async callbacks from old effects bail out
     const claimIdRef = useRef(0)
-
-    // Re-read from localStorage every render (sessionTick forces re-render when auth changes)
-    const isLoggedIn = Boolean(getAccessToken())
 
     // check if browser supports Web Locks API
     const hasTabLocks = typeof navigator !== 'undefined' && Boolean(navigator.locks)
@@ -42,13 +45,40 @@ function App() {
         setSessionTick((n) => n + 1)
     }
 
-    function handleLogout() {
-        clearAuth()
-        refreshSession() // Force re-render. When lock effect deps change, React runs the 1st effect's
-        // cleanup first (releaseLock → lock released), then runs the 2nd effect setup.
-        // On logout, the 2nd setup returns early (!isLoggedIn) — no new lock claimed.
+    async function handleLogout() {
+        try {
+            await logoutPlayer()
+        } catch {}
+
+        clearSession()
+        setAuthStatus('anonymous')
         setAuthScreen('login')
     }
+
+    // Use Effect for restore session
+    useEffect(() => {
+        let cancelled = false;
+
+        async function restoreSession() {
+            try {
+                const me = await fetchMe()
+                if (cancelled) return
+
+                saveSession(me.username, me.balance)
+                setAuthStatus('authenticated')
+            } catch {
+                if (cancelled) return
+                clearSession()
+                setAuthStatus('anonymous')
+            }
+        }
+
+        void restoreSession()
+        return () => {
+            cancelled = true
+        }
+    }, [sessionTick]);
+
 
     /*
      * Cross-tab auth sync
@@ -59,8 +89,10 @@ function App() {
      */
     useEffect(() => {
         function onStorage(e: StorageEvent) {
-            if (e.key === 'accessToken') {
-                refreshSession()
+            if (e.key === 'username') {
+                refreshSession()// Force re-render. When lock effect deps change, React runs the 1st effect's
+                // cleanup first (releaseLock → lock released), then runs the 2nd effect setup.
+                // On logout, the 2nd setup returns early (!isLoggedIn) — no new lock claimed.
             }
         }
         window.addEventListener('storage', onStorage)
@@ -120,6 +152,16 @@ function App() {
         }
     }, [isLoggedIn, sessionTick, hasTabLocks])
 
+    if (authStatus === 'loading') {
+        return (
+            <div className="app-shell">
+                <main className="grid min-h-[50svh] place-items-center">
+                    <p className="text-muted">Loading…</p>
+                </main>
+            </div>
+        )
+    }
+
     // Full-page blocked UI — LobbyPage is NOT mounted, so no WebSocket is opened
     if (isLoggedIn && hasTabLocks && tabLock === 'blocked') {
         return (
@@ -156,6 +198,7 @@ function App() {
                     <LoginPage
                         onGoRegister={() => setAuthScreen('register')}
                         onSuccess={() => {
+                            setAuthStatus('authenticated')
                             refreshSession() // token saved → re-render → tab lock effect runs
                         }}
                     />

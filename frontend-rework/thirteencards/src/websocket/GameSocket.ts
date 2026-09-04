@@ -1,4 +1,3 @@
-import { getAccessToken } from "../auth/authStorage"
 
 type MessageHandler = (data: unknown) => void;
 
@@ -11,14 +10,12 @@ export class GameSocket {
         onOpen?: () => void,
         onClose?: () => void
     ) {
-        const token = getAccessToken();
-        if(!token) throw new Error("Not logged in");
 
         this.onMessage = onMessage;
 
         const protocol = window.location.protocol === "https:" ? "wss" : "ws";
 
-        const url = `${protocol}://${window.location.host}/ws?token=${encodeURIComponent(token)}`;
+        const url = `${protocol}://${window.location.host}/ws`;
 
         this.websocket = new WebSocket(url);
 
