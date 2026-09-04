@@ -29,7 +29,7 @@ public class PlayerController {
         this.authPlayerService = authPlayerService;
     }
 
-    @PostMapping("/register")
+    @PostMapping
     public ResponseEntity<CreatePlayerResponseDto> createPlayer(
             @Valid @RequestBody CreatePlayerRequestDto createPlayerRequestDto) {
 

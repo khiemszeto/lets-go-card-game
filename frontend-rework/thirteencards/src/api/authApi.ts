@@ -24,12 +24,11 @@ export async function loginPlayer(body: LoginRequest) : Promise<LoginResponse> {
     }
 
     return response.json();
-
 }
 
 export async function registerPlayer(body: RegisterRequest) : Promise<RegisterResponse> {
 
-    const response = await fetch('/api/players/register', {
+    const response = await fetch('/api/players', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'

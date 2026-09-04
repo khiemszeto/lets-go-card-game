@@ -84,6 +84,8 @@ function RegisterPage({onGoLogin, onRegistered}: Props) {
                             </button>
                         </p>
 
+
+
                     </div>
                 </div>
             </div>

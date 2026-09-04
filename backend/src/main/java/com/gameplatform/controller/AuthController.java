@@ -3,6 +3,7 @@ package com.gameplatform.controller;
 import com.gameplatform.dto.CreatePlayerResponseDto;
 import com.gameplatform.dto.LoginRequestDto;
 import com.gameplatform.dto.LoginResponseDto;
+import com.gameplatform.entity.CustomUserDetails;
 import com.gameplatform.service.AuthPlayerService;
 import com.gameplatform.service.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,6 +51,8 @@ public class AuthController {
 
         String token = jwtService.generateToken(authentication);
 
-        return new LoginResponseDto(token);
+        CustomUserDetails player = (CustomUserDetails) authentication.getPrincipal();
+
+        return new LoginResponseDto(token, player.getBalance());
     }
 }

@@ -11,5 +11,4 @@ public class CountdownMessageDto {
     private String type;
     private String roomId;
     private int seconds;
-
 }

@@ -9,4 +9,5 @@ import lombok.Setter;
 @AllArgsConstructor
 public class LoginResponseDto {
     private String accessToken;
+    private Long balance;
 }

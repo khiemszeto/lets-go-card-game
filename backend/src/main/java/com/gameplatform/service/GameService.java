@@ -105,7 +105,6 @@ public class GameService {
 
 
 
-
             roomNotifier.sendToRoom(room, gameOver);
             room.resetToWaiting();
 
