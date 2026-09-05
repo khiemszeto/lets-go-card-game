@@ -1,3 +1,9 @@
 .idea/
 
+# Local secrets / env
+.env
+.env.*
+**/.env
+**/application-local.properties
+
 

@@ -139,7 +139,7 @@ function App() {
             try {
                 const state = await navigator.locks.query()
                 if (claimIdRef.current !== claimId) return
-                if (state.held.some((lock) => lock.name === GAME_TAB_LOCK)) {
+                if (state.held?.some((lock) => lock.name === GAME_TAB_LOCK)) {
                     setTabLock('blocked')
                 }
             } catch {
@@ -202,6 +202,7 @@ function App() {
         <div className={['app-shell', inPlaySurface ? 'landscape-play' : ''].join(' ')}>
             {inPlaySurface && <LandscapeGate />}
             <Header
+                key={headerTick}
                 username={isLoggedIn ? getUsername() : null}
                 balance={isLoggedIn ? getBalance() : null}
                 onLogout={() => handleLogout()}

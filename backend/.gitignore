@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Secrets / machine-local config (never commit)
+**/application-local.properties
+**/application-*-local.properties
+.env
+.env.*
+
+# FE build output copied into the jar at package time — do not commit
+src/main/resources/static/

@@ -178,7 +178,7 @@ public class LobbyService {
                 dto.setJoinable(false);
             } else if (room.isCountingDown()) {
                 dto.setStatus("COUNTING_DOWN");
-                dto.setJoinable(false);
+                dto.setJoinable(!room.isFull());
             } else {
                 dto.setStatus("WAITING");
                 dto.setJoinable(!room.isFull());

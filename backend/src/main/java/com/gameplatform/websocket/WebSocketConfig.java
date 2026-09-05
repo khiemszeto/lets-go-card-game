@@ -26,6 +26,6 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(gamePlayWebSocketHandler, "/ws")
-                .setAllowedOrigins("http://localhost:5173", "http://localhost:8080");
+                .setAllowedOrigins("http://localhost:5173", "http://localhost:8080", "https://thirteencards.khiemszeto.com" );
     }
 }

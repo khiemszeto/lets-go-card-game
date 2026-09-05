@@ -117,15 +117,15 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
     return (
         <div className="game-table relative mx-auto w-full max-w-[1600px] items-center gap-2 px-2 py-1 lg:gap-4">
             {gamestate.winnerId != null && (
-                <div className="absolute inset-0 z-30 grid place-items-center bg-black/60">
-                    <div className="rounded-2xl bg-base-200 px-8 py-6 text-center shadow-xl">
+                <div className="pointer-events-none absolute inset-0 z-30 grid place-items-center bg-transparent">
+                    <div className="text-center drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
                         <p className="text-xs uppercase tracking-widest text-gold">Game over</p>
-                        <h2 className="mt-2 text-2xl font-bold">
+                        <h2 className="mt-1 text-2xl font-bold sm:text-3xl">
                             {gamestate.players.find((p) => p.playerId === gamestate.winnerId)?.username
                                 ?? `Player ${gamestate.winnerId}`}{' '}
                             wins!
                         </h2>
-                        <p className="mt-3 text-sm text-muted">
+                        <p className="mt-1 text-sm text-muted">
                             Returning to table in {gamestate.endSeconds ?? 0}s…
                         </p>
                     </div>
@@ -155,8 +155,18 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
                 </div>
 
                 <div className="play-slot col-start-2 row-start-2 min-h-0 min-w-0 self-stretch">
-                    <div className="play-area flex items-center justify-center gap-[clamp(0.25rem,0.8vw,0.5rem)] rounded-2xl bg-base-200 shadow-inner">
-                        <LastPlayCards lastPlay={gamestate.lastPlay} />
+                    <div className="play-area flex flex-col items-center justify-center gap-2 rounded-2xl bg-base-200 shadow-inner">
+                        {isMyTurn && !gameEnded && (
+                            <p className="text-lg font-bold uppercase tracking-widest text-gold sm:text-2xl">
+                                Your turn
+                                {turnCountdown != null && (
+                                    <span className="ml-2 font-semibold tabular-nums">{turnCountdown}s</span>
+                                )}
+                            </p>
+                        )}
+                        <div className="flex items-center justify-center gap-[clamp(0.25rem,0.8vw,0.5rem)]">
+                            <LastPlayCards lastPlay={gamestate.lastPlay} />
+                        </div>
                     </div>
                 </div>
 
@@ -207,12 +217,6 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
 
                 <p className="flex items-center justify-center gap-2 text-[length:clamp(0.8rem,2vw,1.125rem)] font-bold">
                     <span>{myUsername}</span>
-                    {isMyTurn && !gameEnded && (
-                        <span className="text-xs font-normal text-gold">Your turn</span>
-                    )}
-                    {isMyTurn && !gameEnded && turnCountdown != null && (
-                        <span className="text-xs font-normal text-gold">{turnCountdown}s</span>
-                    )}
                 </p>
             </div>
         </div>
