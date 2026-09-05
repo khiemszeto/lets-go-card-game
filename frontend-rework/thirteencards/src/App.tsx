@@ -24,6 +24,7 @@ type TabLockState = 'pending' | 'owner' | 'blocked'
 function App() {
     const [tabLock, setTabLock] = useState<TabLockState>('pending')
     const [authScreen, setAuthScreen] = useState<AuthScreen>('login')
+    const [headerTick, setHeaderTick] = useState(0)
 
     // Bumped on login/logout and on storage events so effects re-run and re-read localStorage
     const [sessionTick, setSessionTick] = useState(0)
@@ -98,6 +99,19 @@ function App() {
         window.addEventListener('storage', onStorage)
         return () => window.removeEventListener('storage', onStorage)
     }, [])
+
+    /*
+     * Lister to window event: balance-changed to update the balance in the header
+     */
+    useEffect(() => {
+        function onBalanceChanged() {
+            setHeaderTick((n) => n + 1)
+        }
+
+        window.addEventListener('balance-changed', onBalanceChanged)
+        return () => window.removeEventListener('balance-changed', onBalanceChanged)
+    }, []);
+
 
     /*
      * One game tab per logged-in player (Web Locks API)

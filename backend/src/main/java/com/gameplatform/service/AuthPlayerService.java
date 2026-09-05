@@ -1,8 +1,13 @@
 package com.gameplatform.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.gameplatform.game.model.Card;
+import com.gameplatform.websocket.dto.outbound.game.BalanceChangeDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -16,6 +21,7 @@ import com.gameplatform.entity.Player;
 import com.gameplatform.exception.DuplicateResourceException;
 import com.gameplatform.exception.ResourceNotFoundException;
 import com.gameplatform.repository.PlayerRepository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthPlayerService {
@@ -101,6 +107,51 @@ public class AuthPlayerService {
         return top10.stream().map(this::mapToDTO).toList();
     }
 
+
+    @Transactional
+    public List<BalanceChangeDto> settleBalanceByRemainingCards
+            (Long winnerId, Map<Long, List<Card>> remainingHands) {
+
+        long pot = 0L;
+        Map<Long, Long> deltas = new LinkedHashMap<>();
+
+        for (Map.Entry<Long, List<Card>> entry : remainingHands.entrySet()) {
+            Long loserId = entry.getKey();
+            if (loserId.equals(winnerId)) continue;
+
+            List<Card> loserCards = entry.getValue();
+            long penalty = loserCards.size() * 10;
+            deltas.put(loserId, -penalty);
+            pot += penalty;
+        }
+
+        deltas.put(winnerId, pot);
+
+        List<BalanceChangeDto> result = new ArrayList<>();
+
+        for (Map.Entry<Long, Long> delta : deltas.entrySet()) {
+            Long playerId = delta.getKey();
+            Long deltaAmount = delta.getValue();
+
+            Player player = playerRepository.findById(playerId).orElseThrow(
+                    () -> new ResourceNotFoundException("Player with id " + playerId + " not found")
+            );
+
+
+            long newBalance = player.getBalance() + deltaAmount;
+            player.setBalance(newBalance);
+            player.setUpdatedAt(LocalDateTime.now());
+
+            BalanceChangeDto balanceChangeDto = new BalanceChangeDto();
+            balanceChangeDto.setPlayerName(player.getUsername());
+            balanceChangeDto.setDelta(deltaAmount);
+            balanceChangeDto.setNewBalance(newBalance);
+            result.add(balanceChangeDto);
+        }
+        return result;
+
+    }
+
     private CreatePlayerResponseDto mapToDTO(Player playerResponse) {
         CreatePlayerResponseDto createPlayerResponseDto = new CreatePlayerResponseDto();
 
@@ -124,7 +175,7 @@ public class AuthPlayerService {
         player.setCreatedAt(LocalDateTime.now());
         player.setUpdatedAt(LocalDateTime.now());
         player.setDeleted(false);
-        player.setBalance(0L);
+        player.setBalance(2000L);
 
         return player;
 

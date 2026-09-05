@@ -19,6 +19,7 @@ import TableCard from '../components/TableCard'
 import RoomPage from './RoomPage'
 import GamePage from './GamePage'
 import type {GameState} from "./GamePage";
+import { getUsername, saveSession} from "../auth/authStorage";
 
 function isRoomState(msg: unknown): msg is RoomStateMessage {
     return typeof msg === 'object' && msg !== null && (msg as RoomStateMessage).type === 'ROOM_STATE'
@@ -180,6 +181,15 @@ function LobbyPage() {
                         if (!prev || prev.roomId !== message.roomId) return prev
                         return { ...prev, winnerId: message.winnerId,  endSeconds: 5}
                     })
+
+                    const myBalanceChange
+                        = message.balances?.find((balanceChange) =>
+                        balanceChange.playerName === getUsername())
+
+                    if (myBalanceChange) {
+                        saveSession(myBalanceChange.playerName, myBalanceChange.newBalance)
+                        window.dispatchEvent(new Event('balance-changed'))
+                    }
 
                     return
                 }

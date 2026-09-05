@@ -20,6 +20,4 @@ public class LeftDuringGameMessageDto {
     private List<RoomPlayerDto> players;
     private boolean trickReset;
     private boolean autoPassed; // true if it is a pass, false if it is a skip
-
-
 }

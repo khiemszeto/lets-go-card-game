@@ -19,7 +19,7 @@ function Header({ username, balance, onLogout }: Props) {
                     <div className="flex items-center gap-1.5 sm:gap-2">
                         <span className="badge badge-neutral badge-sm sm:badge-md">{username}</span>
                         {balance != null && (
-                            <span className="badge badge-primary badge-outline badge-sm sm:badge-md">
+                            <span className="badge badge-success badge-soft badge-md sm:badge-lg">
                                 {balance} chips
                             </span>
                         )}

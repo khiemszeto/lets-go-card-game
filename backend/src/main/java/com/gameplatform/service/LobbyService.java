@@ -13,6 +13,7 @@ import com.gameplatform.websocket.RoomNotifier;
 import com.gameplatform.websocket.dto.common.CardDto;
 import com.gameplatform.websocket.dto.common.ErrorMessageDto;
 import com.gameplatform.websocket.dto.common.RoomPlayerDto;
+import com.gameplatform.websocket.dto.outbound.game.BalanceChangeDto;
 import com.gameplatform.websocket.dto.outbound.game.GameOverMessageDto;
 import com.gameplatform.websocket.dto.outbound.game.GameStartMessageDto;
 import com.gameplatform.websocket.dto.outbound.game.HandMessageDto;
@@ -37,7 +38,7 @@ import java.util.concurrent.ScheduledFuture;
 @Service
 public class LobbyService {
 
-
+    private AuthPlayerService authPlayerService;
     private GameHistoryService gameHistoryService;
     private final RoomNotifier roomNotifier;
     private RoomManager roomManager;
@@ -49,12 +50,14 @@ public class LobbyService {
                         TaskScheduler taskScheduler,
                         RoomNotifier roomNotifier,
                         TienLenValidator tienLenValidator,
-                        GameHistoryService gameHistoryService) {
+                        GameHistoryService gameHistoryService,
+                        AuthPlayerService authPlayerService) {
         this.roomManager = roomManager;
         this.taskScheduler = taskScheduler;
         this.roomNotifier = roomNotifier;
         this.tienLenValidator = tienLenValidator;
         this.gameHistoryService = gameHistoryService;
+        this.authPlayerService = authPlayerService;
     }
 
     public Object createRoom(Long playerId, String username) {
@@ -340,6 +343,13 @@ public class LobbyService {
                 GameOverMessageDto gameOver = new GameOverMessageDto();
                 gameOver.setRoomId(roomId.toString());
                 gameOver.setWinnerId(playerId);
+
+                List<BalanceChangeDto> balanceChangeDtos =
+                        authPlayerService.settleBalanceByRemainingCards(playerId, room.getAllHandsForScoring());
+
+                gameOver.setBalances(balanceChangeDtos);
+
+
                 roomNotifier.sendToRoom(room, gameOver);
                 room.resetToWaiting();
 
