@@ -25,17 +25,19 @@ public class GameService {
     private final RoomManager roomManager;
     private final RoomNotifier roomNotifier;
     private final TienLenValidator validator;
+    private final AuthPlayerService authPlayerService;
     private LobbyService lobbyService;
     private TaskScheduler taskScheduler;
 
     public GameService(RoomManager roomManager, RoomNotifier roomNotifier, GameHistoryService gameHistoryService
-            , TienLenValidator validator, LobbyService lobbyService, TaskScheduler taskScheduler) {
+            , TienLenValidator validator, LobbyService lobbyService, TaskScheduler taskScheduler, AuthPlayerService authPlayerService) {
         this.roomManager = roomManager;
         this.roomNotifier = roomNotifier;
         this.validator = validator;
         this.lobbyService = lobbyService;
         this.taskScheduler = taskScheduler;
         this.gameHistoryService = gameHistoryService;
+        this.authPlayerService = authPlayerService;
     }
 
     public Object play(Long playerId, List<CardDto> cardDtos) {
@@ -110,10 +112,10 @@ public class GameService {
             gameOver.setRoomId(room.getRoomId().toString());
             gameOver.setWinnerId(playerId);
 
+            List<BalanceChangeDto> balanceChangeDtos =
+                authPlayerService.settleBalanceByRemainingCards(playerId, room.getAllHandsForScoring());
 
-            // use this to settle the score aftermatch
-            Map<Long, List<Card>> losers = room.getAllHandsForScoring();
-            losers.remove(playerId);
+            gameOver.setBalances(balanceChangeDtos);
 
             roomNotifier.sendToRoom(room, gameOver);
             room.resetToWaiting();
@@ -287,12 +289,15 @@ public class GameService {
         if (activePlayers <= 1) {
             Long winnerId = findTheOnePlayerActiveWithCards(room);
 
-
-
             if (winnerId != null) {
                 GameOverMessageDto gameOver = new GameOverMessageDto();
                 gameOver.setRoomId(room.getRoomId().toString());
                 gameOver.setWinnerId(winnerId);
+
+                List<BalanceChangeDto> balanceChangeDtos =
+                        authPlayerService.settleBalanceByRemainingCards(winnerId, room.getAllHandsForScoring());
+
+                gameOver.setBalances(balanceChangeDtos);
 
                 // use this to settle the score aftermatch
                 Map<Long, List<Card>> losers = room.getAllHandsForScoring();

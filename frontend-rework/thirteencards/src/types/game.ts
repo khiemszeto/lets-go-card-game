@@ -72,10 +72,17 @@ export interface PassResultMessage {
     currentPlayerId: number
     trickReset: boolean
 }
+export interface BalanceChange {
+    playerName: string
+    delta: number
+    newBalance: number
+}
+
 export interface GameOverMessage {
     type: 'GAME_OVER'
     roomId: string
     winnerId: number
+    balances: BalanceChange[]
 }
 export interface LeftDuringGameMessage {
     type: 'LEFT_DURING_GAME'

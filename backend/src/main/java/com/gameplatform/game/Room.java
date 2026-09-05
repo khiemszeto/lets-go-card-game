@@ -192,6 +192,7 @@ public class Room {
         }
     }
 
+    // get Hand of all players in the end of the game, including those who left for penalty
     public Map<Long, List<Card>> getAllHandsForScoring() {
         Map<Long, List<Card>> allRemainingHands = new HashMap<>();
 
