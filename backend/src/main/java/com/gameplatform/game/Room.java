@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import com.gameplatform.game.model.Card;
 
+import com.gameplatform.game.model.GameMove;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,20 +25,42 @@ public class Room {
     private Status roomStatus;
 
     private Integer roomId;
+    // map playerId to playerName
+    private HashMap<Long, String> mapOfPlayers;
 
-    private HashMap<Long, String> mapOfPlayers; // playerId -> playerName *
     private Set<Long> whoIsReady;
-    private List<Long> seatOrder = new ArrayList<>(); // seat order *
-    private Map<Long, List<Card>> hands = new HashMap<>(); // playerId -> their cards
-    private Long currentTurnPlayerId; // current player to play
+
+    // Seat Order by playerId
+    private List<Long> seatOrder = new ArrayList<>();
+
+    // map playerId to their current card state in a game
+    private Map<Long, List<Card>> hands = new HashMap<>();
+
+    private Long currentTurnPlayerId;
+
+    // map left during game playerId to their card state when they left for penalty
     private Map<Long, List<Card>> leftPlayersHands = new HashMap<>();
 
+    // last played card in a trick
     private List<Card> lastPlayCards;
+
+    // the player who played the last card
     private Long lastPlayPlayerId;
+
+    // count how many consecutive passes have been made to determine if the trick is over (>= 3)
     private int consecutivePasses;
+
     private boolean firstTrickPlayed;
 
 
+    // *for each game data preservation*
+    private Map<Long, List<Card>> startingHands = new HashMap<>();
+    private List<Long> startingPlayOrder = new ArrayList<>();
+    private Long historyFirstPlayerId;
+    private List<GameMove> moveLog = new ArrayList<>();
+
+
+    // Constructor
     public Room(Integer roomId) {
         this.roomId = roomId;
         mapOfPlayers = new HashMap<>();
@@ -144,7 +167,6 @@ public class Room {
 
             if (cards != null && !cards.isEmpty()) return candidate;
         }
-
         return null; // nobody left with cards
     }
 
@@ -159,6 +181,7 @@ public class Room {
             consecutivePasses = 0;
             firstTrickPlayed = false;
             leftPlayersHands.clear();
+            clearHistoryBuffer();
         }
     }
 
@@ -179,6 +202,28 @@ public class Room {
     }
 
 
+    // *data preservation helper*
+    public void snapshotStartingHands() {
+        startingHands.clear();
+        for (Map.Entry<Long, List<Card>> entry : hands.entrySet()) {
+            startingHands.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+   }
+
+   public void snapshotSeatsForHistory() {
+        startingPlayOrder = new ArrayList<>(seatOrder);
+   }
+
+   public void appendMove(GameMove move) {
+        moveLog.add(move);
+   }
+
+   public void clearHistoryBuffer() {
+        startingHands.clear();
+        startingPlayOrder.clear();
+        moveLog.clear();
+        historyFirstPlayerId   = null;
+   }
 
 
 

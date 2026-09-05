@@ -3,6 +3,7 @@ package com.gameplatform.service;
 import com.gameplatform.game.Room;
 import com.gameplatform.game.RoomManager;
 import com.gameplatform.game.model.Card;
+import com.gameplatform.game.model.GameMove;
 import com.gameplatform.game.model.Rank;
 import com.gameplatform.game.model.Suit;
 import com.gameplatform.game.rules.TienLenValidator;
@@ -20,19 +21,21 @@ import java.util.*;
 
 @Service
 public class GameService {
+    private final GameHistoryService gameHistoryService;
     private final RoomManager roomManager;
     private final RoomNotifier roomNotifier;
     private final TienLenValidator validator;
     private LobbyService lobbyService;
     private TaskScheduler taskScheduler;
 
-    public GameService(RoomManager roomManager, RoomNotifier roomNotifier
+    public GameService(RoomManager roomManager, RoomNotifier roomNotifier, GameHistoryService gameHistoryService
             , TienLenValidator validator, LobbyService lobbyService, TaskScheduler taskScheduler) {
         this.roomManager = roomManager;
         this.roomNotifier = roomNotifier;
         this.validator = validator;
         this.lobbyService = lobbyService;
         this.taskScheduler = taskScheduler;
+        this.gameHistoryService = gameHistoryService;
     }
 
     public Object play(Long playerId, List<CardDto> cardDtos) {
@@ -72,6 +75,13 @@ public class GameService {
             return error("Invalid play");
         }
 
+        GameMove gameMove = new GameMove();
+        gameMove.setPlayerId(playerId);
+        gameMove.setCards(new ArrayList<>(playedCards));
+        gameMove.setType("PLAY");
+
+        room.appendMove(gameMove);
+
         // Validating step passes
         for (Card c : playedCards) {
             hand.remove(c);
@@ -84,6 +94,8 @@ public class GameService {
 
         // Empty hand = game over
         if (hand.isEmpty()) {
+            gameHistoryService.recordGame(room, playerId);
+
             PlayResultMessageDto playResult = new PlayResultMessageDto();
             playResult.setRoomId(room.getRoomId().toString());
             playResult.setPlayerId(playerId);
@@ -102,8 +114,6 @@ public class GameService {
             // use this to settle the score aftermatch
             Map<Long, List<Card>> losers = room.getAllHandsForScoring();
             losers.remove(playerId);
-
-
 
             roomNotifier.sendToRoom(room, gameOver);
             room.resetToWaiting();
@@ -164,6 +174,13 @@ public class GameService {
         } else {
             room.setCurrentTurnPlayerId(room.nextPlayerId());
         }
+
+        GameMove gameMove = new GameMove();
+        gameMove.setPlayerId(playerId);
+        gameMove.setType("PASS");
+        gameMove.setCards(null);
+
+        room.appendMove(gameMove);
 
         PassResultMessageDto passResult = new PassResultMessageDto();
         passResult.setRoomId(room.getRoomId().toString());
@@ -258,10 +275,19 @@ public class GameService {
         room.archiveHandForScoring(playerId);
         roomManager.leaveRoom(playerId);
 
+        GameMove gameMove = new GameMove();
+        gameMove.setPlayerId(playerId);
+        gameMove.setType("LEAVE");
+        gameMove.setCards(null);
+
+        room.appendMove(gameMove);
+
         int activePlayers = countActivePlayers(room);
 
         if (activePlayers <= 1) {
             Long winnerId = findTheOnePlayerActiveWithCards(room);
+
+
 
             if (winnerId != null) {
                 GameOverMessageDto gameOver = new GameOverMessageDto();
@@ -272,6 +298,7 @@ public class GameService {
                 Map<Long, List<Card>> losers = room.getAllHandsForScoring();
                 losers.remove(winnerId);
 
+                gameHistoryService.recordGame(room, winnerId);
                 roomNotifier.sendToRoom(room, gameOver);
 
                 LeftRoomMessageDto leftRoomMessageDto = new LeftRoomMessageDto();

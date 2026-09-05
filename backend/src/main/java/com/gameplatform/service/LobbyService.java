@@ -37,6 +37,8 @@ import java.util.concurrent.ScheduledFuture;
 @Service
 public class LobbyService {
 
+
+    private GameHistoryService gameHistoryService;
     private final RoomNotifier roomNotifier;
     private RoomManager roomManager;
     private ConcurrentHashMap<Integer, List<ScheduledFuture<?>>> countdownRooms = new ConcurrentHashMap<>();
@@ -46,11 +48,13 @@ public class LobbyService {
     public LobbyService(RoomManager roomManager,
                         TaskScheduler taskScheduler,
                         RoomNotifier roomNotifier,
-                        TienLenValidator tienLenValidator) {
+                        TienLenValidator tienLenValidator,
+                        GameHistoryService gameHistoryService) {
         this.roomManager = roomManager;
         this.taskScheduler = taskScheduler;
         this.roomNotifier = roomNotifier;
         this.tienLenValidator = tienLenValidator;
+        this.gameHistoryService = gameHistoryService;
     }
 
     public Object createRoom(Long playerId, String username) {
@@ -268,7 +272,6 @@ public class LobbyService {
             if (hand.contains(new Card(Suit.SPADES, Rank.THREE))) room.setCurrentTurnPlayerId(playerId);
             room.setHand(playerId, hand);
 
-
             RoomPlayerDto roomPlayerDto = new RoomPlayerDto();
             roomPlayerDto.setUsername(room.getMapOfPlayers().get(playerId));
             roomPlayerDto.setPlayerId(playerId);
@@ -296,6 +299,12 @@ public class LobbyService {
 
             room.setCurrentTurnPlayerId(theFirstPlayer);
         }
+
+        // set up for game play history data
+        room.snapshotStartingHands();
+        room.snapshotSeatsForHistory();
+        room.setHistoryFirstPlayerId( room.getCurrentTurnPlayerId());
+        room.getMoveLog().clear();
 
         GameStartMessageDto gameStartMessageDto = new GameStartMessageDto();
         gameStartMessageDto.setRoomId(roomId.toString());
@@ -326,6 +335,8 @@ public class LobbyService {
             List<Card> hand = room.getHand(playerId);
 
             if (hasQuadOfTwos(hand)) {
+                gameHistoryService.recordGame(room, playerId);
+
                 GameOverMessageDto gameOver = new GameOverMessageDto();
                 gameOver.setRoomId(roomId.toString());
                 gameOver.setWinnerId(playerId);

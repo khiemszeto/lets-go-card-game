@@ -1,4 +1,5 @@
 import type { RefObject } from 'react'
+import { useState, useEffect } from 'react'
 import type { Card, RoomPlayer } from '../types/game'
 import type { GameSocket } from '../websocket/GameSocket'
 import PlayingCard from '../components/PlayingCard'
@@ -34,11 +35,14 @@ function LastPlayCards({ lastPlay }: { lastPlay: GameState['lastPlay'] }) {
 }
 
 function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
+    const [turnCountdown, setTurnCountDown] = useState<number | null> (null);
+
     const myHand = sortHand(gamestate.myHand)
     const myUsername = getUsername()
     const me = gamestate.players.find((p) => p.username === myUsername)
     const isMyTurn = me != null && me.playerId === gamestate.currentPlayerId
     const gameEnded = gamestate.winnerId != null
+    const TURN_DURATION = 15
 
     function relativeSeat(player: RoomPlayer) {
         if (!me) return 0
@@ -72,6 +76,43 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
     function handleLeaveDuringGame() {
         socketRef.current?.leaveDuringGame()
     }
+
+    useEffect(() => {
+        if (!isMyTurn || gameEnded) {
+            setTurnCountDown(null);
+            return
+        }
+
+        // If free load: no auto pass
+        if (gamestate.lastPlay == null) {
+            setTurnCountDown(null);
+            return
+        }
+
+        setTurnCountDown(TURN_DURATION);
+
+        const started = Date.now();
+        const tick = setInterval(() => {
+            const tickLeft = TURN_DURATION - Math.floor((Date.now() - started) / 1000);
+
+            if (tickLeft <= 0) {
+                window.clearInterval(tick);
+                setTurnCountDown(0);
+                socketRef.current?.pass();
+                return
+            }
+
+            setTurnCountDown(tickLeft);
+        }, 500)
+
+        return ()  => window.clearInterval(tick);
+    }, [
+        isMyTurn,
+        gameEnded,
+        gamestate.currentPlayerId,
+        gamestate.lastPlay,
+    ]);
+
 
     return (
         <div className="game-table relative mx-auto w-full max-w-[1600px] items-center gap-2 px-2 py-1 lg:gap-4">
@@ -164,17 +205,15 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
                     </div>
                 </div>
 
-                <p className="text-center text-[length:clamp(0.8rem,2vw,1.125rem)] font-bold">
-                    {myUsername}
-                    {isMyTurn && (
-                        <span className="ml-2 text-xs font-normal text-gold">Your turn</span>
+                <p className="flex items-center justify-center gap-2 text-[length:clamp(0.8rem,2vw,1.125rem)] font-bold">
+                    <span>{myUsername}</span>
+                    {isMyTurn && !gameEnded && (
+                        <span className="text-xs font-normal text-gold">Your turn</span>
+                    )}
+                    {isMyTurn && !gameEnded && turnCountdown != null && (
+                        <span className="text-xs font-normal text-gold">{turnCountdown}s</span>
                     )}
                 </p>
-                {gamestate.selected.length > 0 && (
-                    <p className="text-center text-sm text-muted">
-                        Selecting: {gamestate.selected.length} cards
-                    </p>
-                )}
             </div>
         </div>
     )
