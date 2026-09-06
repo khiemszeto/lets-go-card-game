@@ -17,8 +17,12 @@ MySQL takes a few seconds to accept connections after the container starts.
 **Terminal 2 — backend:**
 ```bash
 cd ~/card-game/backend
+export JWT_SECRET='(Base64-encoded HMAC key — never commit this)'
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=calvin-dev
 ```
+
+`jwt.secret` is required via env `JWT_SECRET` (see `application.properties`).  
+Optional: copy `application-local.properties.example` → `application-local.properties` (gitignored) and run with profile `local`.
 
 Use your own `application-<name>-dev.properties` profile. For the Docker setup:
 
@@ -35,7 +39,7 @@ Requires a JDK 25 entry in `~/.m2/toolchains.xml`, otherwise the build fails wit
 
 **Terminal 3 — frontend:**
 ```bash
-cd ~/card-game/frontend
+cd ~/card-game/frontend-rework/thirteencards
 npm run dev
 ```
 
@@ -45,13 +49,15 @@ npm run dev
 Frontend edits hot-reload instantly. Backend edits trigger a DevTools restart
 (a few seconds, automatic).
 
-Verify the full path end to end — browser console at 5173:
+---
 
-```js
-await fetch('/api/tasks').then(r => r.json())
-```
+## Secrets (do not commit)
 
-An empty array proves browser → Vite → Spring → back.
+- `JWT_SECRET` — required at runtime (Lightsail systemd / local export)
+- `APP_COOKIE_SECURE=true` on HTTPS demos
+- Never put real secrets in `application.properties`; use env or gitignored `application-local.properties`
+
+If a secret was ever committed, rotate it on the server and treat the old value as burned.
 
 ---
 
@@ -59,17 +65,20 @@ An empty array proves browser → Vite → Spring → back.
 
 ```bash
 # 1. Build frontend to static files
-cd ~/card-game/frontend
+cd ~/card-game/frontend-rework/thirteencards
 npm run build
 
 # 2. Copy into Spring's static folder (clear old hashed files first)
-rm -rf ../backend/src/main/resources/static/*
-cp -r dist/* ../backend/src/main/resources/static/
+rm -rf ../../backend/src/main/resources/static/*
+mkdir -p ../../backend/src/main/resources/static
+cp -r dist/* ../../backend/src/main/resources/static/
 
 # 3. Package the jar
-cd ../backend
-./mvnw clean package
+cd ../../backend
+./mvnw -DskipTests clean package
 
-# 4. Run it
-java25 -jar target/backend-0.0.1-SNAPSHOT.jar
+# 4. Run it (demo profile + secrets from env)
+export JWT_SECRET='...'
+export SPRING_PROFILES_ACTIVE=demo
+java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```

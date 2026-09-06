@@ -1,0 +1,6 @@
+# Copy to application-local.properties (gitignored) and fill in values.
+# Run with: --spring.profiles.active=khiem-dev,local
+# Or export JWT_SECRET instead of putting it here.
+
+jwt.secret=REPLACE_WITH_BASE64_SECRET
+app.cookie.secure=false
