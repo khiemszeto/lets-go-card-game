@@ -36,4 +36,26 @@ public class GamePage extends BasePage {
     public void waitForLastPlay(String rank, String suit) {
         visible(cardIn("last-play", rank, suit));
     }
+
+    // Card ids like "THREE-SPADES"
+    public void playCards(String... cards) {
+        for (String card : cards) {
+            click(By.cssSelector("[data-testid=\"QA:my-hand\"] [data-testid=\"QA:card-" + card + "\"]"));
+        }
+        click(qa("play"));
+    }
+
+    public void pass() {
+        click(qa("pass"));
+    }
+
+    // Pass is enabled only on your turn
+    public GamePage waitForMyTurn() {
+        wait.until(d -> d.findElement(qa("pass")).isEnabled());
+        return this;
+    }
+
+    public String winner() {
+        return visible(qa("winner")).getText();
+    }
 }

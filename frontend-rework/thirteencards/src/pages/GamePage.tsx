@@ -120,7 +120,7 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
                 <div className="pointer-events-none absolute inset-0 z-30 grid place-items-center bg-transparent">
                     <div className="text-center drop-shadow-[0_2px_8px_rgba(0,0,0,0.85)]">
                         <p className="text-xs uppercase tracking-widest text-gold">Game over</p>
-                        <h2 className="mt-1 text-2xl font-bold sm:text-3xl">
+                        <h2 data-testid="QA:winner" className="mt-1 text-2xl font-bold sm:text-3xl">
                             {gamestate.players.find((p) => p.playerId === gamestate.winnerId)?.username
                                 ?? `Player ${gamestate.winnerId}`}{' '}
                             wins!
@@ -207,6 +207,7 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
                         </button>
                         <button
                             type="button"
+                            data-testid="QA:pass"
                             className="btn btn-outline btn-sm"
                             disabled={!isMyTurn || gameEnded}
                             onClick={handlePass}

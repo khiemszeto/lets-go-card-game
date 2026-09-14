@@ -33,7 +33,10 @@ public abstract class BaseE2E {
     }
 
     protected LobbyPage registerAndLogin(WebDriver driver, String tag) {
-        String username = "qa" + System.currentTimeMillis() + tag;
+        return registerAndLoginAs(driver, "qa" + System.currentTimeMillis() + tag);
+    }
+
+    protected LobbyPage registerAndLoginAs(WebDriver driver, String username) {
         driver.get(BASE_URL);
         return new LoginPage(driver)
                 .goToRegister()
