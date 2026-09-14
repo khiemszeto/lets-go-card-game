@@ -61,6 +61,22 @@ If a secret was ever committed, rotate it on the server and treat the old value 
 
 ---
 
+## Tests
+
+```bash
+cd ~/card-game/backend
+./mvnw test                                        # unit + integration (needs Docker)
+
+# E2E: start db + frontend, then backend with a fixed deal
+docker compose up -d                                         # from ~/card-game
+npm run dev                                                  # from ~/card-game/frontend-rework/thirteencards
+export JWT_SECRET=$(openssl rand -base64 32)                                         # from ~/card-game/backend
+APP_DECK_SHUFFLE=false ./mvnw spring-boot:run -Dspring-boot.run.profiles=calvin-dev   # from ~/card-game/backend
+HEADLESS=false ./mvnw test -Dgroups=e2e -DexcludedGroups=none                        # from ~/card-game/backend, separate terminal
+```
+
+---
+
 ## Production build (monolith)
 
 ```bash

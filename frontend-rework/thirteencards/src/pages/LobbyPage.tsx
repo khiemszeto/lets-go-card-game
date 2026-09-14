@@ -316,7 +316,7 @@ function LobbyPage() {
                     <div className="hall-shell__toolbar flex shrink-0 flex-col gap-2 sm:mb-2 sm:flex-row sm:flex-wrap sm:items-end sm:justify-between sm:gap-4">
                         <div className="min-w-0">
                             <p className="text-[10px] uppercase tracking-widest text-gold sm:text-xs">Tiến Lên</p>
-                            <h2 className="text-base font-bold leading-tight sm:text-2xl">Game Hall</h2>
+                            <h2 data-testid="QA:lobby-title" className="text-base font-bold leading-tight sm:text-2xl">Game Hall</h2>
                             <p className="hidden text-sm text-muted sm:block">
                                 Join a table or create your own
                             </p>
@@ -328,6 +328,7 @@ function LobbyPage() {
                             >
                                 <input
                                     type="text"
+                                    data-testid="QA:join-room-input"
                                     value={joinInput}
                                     onChange={(e) => setJoinInput(e.target.value)}
                                     placeholder="Table #"
@@ -335,6 +336,7 @@ function LobbyPage() {
                                 />
                                 <button
                                     type="submit"
+                                    data-testid="QA:join-room-submit"
                                     className="btn btn-outline btn-sm"
                                     disabled={!webSocketConnected}
                                 >
@@ -358,6 +360,7 @@ function LobbyPage() {
                             </button>
                             <button
                                 type="button"
+                                data-testid="QA:create-room"
                                 className="btn btn-primary btn-sm shrink-0"
                                 onClick={handleCreateRoom}
                                 disabled={!webSocketConnected}

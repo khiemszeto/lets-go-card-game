@@ -29,6 +29,8 @@
 	<properties>
 		<java.version>25</java.version>
 		<testcontainers.version>2.0.5</testcontainers.version>
+		<!-- Skip e2e by default. Run with -Dgroups=e2e -DexcludedGroups=none -->
+		<excludedGroups>e2e</excludedGroups>
 	</properties>
 	<dependencyManagement>
 		<dependencies>
@@ -120,6 +122,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <scope>test</scope>
         </dependency>
 </dependencies>
 

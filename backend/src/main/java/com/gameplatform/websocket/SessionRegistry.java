@@ -31,7 +31,7 @@ public class SessionRegistry {
         return sessionPlayers.get(playerId);
     }
 
-    public void add(WebSocketSession session, Long playerId) throws IOException {
+    public synchronized void add(WebSocketSession session, Long playerId) throws IOException {
         // check if player is already connected
         if (sessionPlayers.containsKey(playerId)) {
             WebSocketSession oldSession = sessionPlayers.get(playerId);
@@ -43,7 +43,7 @@ public class SessionRegistry {
         sessionPlayers.put(playerId, session);
     }
 
-    public void remove(WebSocketSession session) {
+    public synchronized void remove(WebSocketSession session) {
         Long playerId = (Long) session.getAttributes().get("playerId");
 
         if (playerId != null && session == sessionPlayers.get(playerId)) {

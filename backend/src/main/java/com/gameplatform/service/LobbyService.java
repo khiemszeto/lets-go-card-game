@@ -20,11 +20,13 @@ import com.gameplatform.websocket.dto.outbound.game.HandMessageDto;
 import com.gameplatform.websocket.dto.outbound.lobby.CountdownMessageDto;
 import com.gameplatform.websocket.dto.outbound.lobby.LeftRoomMessageDto;
 import com.gameplatform.websocket.dto.outbound.lobby.RoomStateMessageDto;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -45,6 +47,10 @@ public class LobbyService {
     private ConcurrentHashMap<Integer, List<ScheduledFuture<?>>> countdownRooms = new ConcurrentHashMap<>();
     private TaskScheduler taskScheduler;
     private TienLenValidator tienLenValidator;
+
+    // false in e2e tests for a predictable deal
+    @Value("${app.deck.shuffle:true}")
+    private boolean shuffleDeck;
 
     public LobbyService(RoomManager roomManager,
                         TaskScheduler taskScheduler,
@@ -263,7 +269,8 @@ public class LobbyService {
         room.clearHands();
 
         Deck deck = new Deck();
-        deck.shuffle();
+        if (shuffleDeck) deck.shuffle();
+        else Collections.reverse(deck.cards);
 
         List<Long> players = room.getWhoIsReady().stream().toList();
 

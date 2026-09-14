@@ -164,7 +164,7 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
                                 )}
                             </p>
                         )}
-                        <div className="flex items-center justify-center gap-[clamp(0.25rem,0.8vw,0.5rem)]">
+                        <div data-testid="QA:last-play" className="flex items-center justify-center gap-[clamp(0.25rem,0.8vw,0.5rem)]">
                             <LastPlayCards lastPlay={gamestate.lastPlay} />
                         </div>
                     </div>
@@ -178,7 +178,7 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
             <div className="flex w-full shrink-0 flex-col items-center gap-1">
                 <div className="flex items-center justify-center gap-3">
 
-                    <div className="flex flex-wrap justify-center gap-[clamp(0.25rem,0.7vw,0.7rem)]"
+                    <div data-testid="QA:my-hand" className="flex flex-wrap justify-center gap-[clamp(0.25rem,0.7vw,0.7rem)]"
                          style={{
                              width:
                                  'calc(13 * var(--card-w) + 12 * clamp(0.25rem, 0.7vw, 0.7rem))',
@@ -198,6 +198,7 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
                     <div className="flex shrink-0 flex-col gap-2">
                         <button
                             type="button"
+                            data-testid="QA:play"
                             className="btn btn-primary btn-sm"
                             disabled={!isMyTurn || gamestate.selected.length === 0 || gameEnded}
                             onClick={handlePlay}
