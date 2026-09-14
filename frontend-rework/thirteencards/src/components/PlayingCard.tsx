@@ -16,6 +16,7 @@ function PlayingCard({ card, isSelected, onClick, disabled }: Props) {
     return (
         <button
             type="button"
+            data-testid={`QA:card-${card.rank}-${card.suit}`}
             disabled={disabled}
             onClick={onClick}
             className={[

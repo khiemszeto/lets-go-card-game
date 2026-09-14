@@ -44,6 +44,7 @@ function LoginPage({onGoRegister, onSuccess} : Props) {
                         <input
                             className="input input-bordered w-full"
                             type="text"
+                            data-testid="QA:login-username"
                             placeholder="Username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
@@ -54,19 +55,20 @@ function LoginPage({onGoRegister, onSuccess} : Props) {
                         <input
                             className="input input-bordered w-full"
                             type="password"
+                            data-testid="QA:login-password"
                             placeholder="Password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
                     {error && <div className="alert alert-error">{error}</div>}
-                    <button className="btn btn-primary w-full" type="submit" disabled={loading}>
+                    <button data-testid="QA:login-submit" className="btn btn-primary w-full" type="submit" disabled={loading}>
                         {loading ? 'Logging in…' : 'Login'}
                     </button>
                 </form>
             <p className="mt-4 text-center text-sm">
                 Don&apos;t have an account?{' '}
-                <button className="btn btn-link btn-sm" type="button" onClick={onGoRegister}>Register</button>
+                <button data-testid="QA:go-register" className="btn btn-link btn-sm" type="button" onClick={onGoRegister}>Register</button>
             </p>
                 </div>
             </div>

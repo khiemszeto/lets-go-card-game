@@ -18,7 +18,7 @@ function RoomPage({ roomState, socketRef, countdown }: Props) {
         <div className="room-shell mx-auto flex h-full min-h-0 w-full max-w-5xl flex-col gap-2 overflow-hidden">
             <div className="room-shell__title shrink-0 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-gold sm:text-xs">At the table</p>
-                <h2 className="text-base font-bold leading-tight sm:text-2xl">
+                <h2 data-testid="QA:room-title" className="text-base font-bold leading-tight sm:text-2xl">
                     Table {roomState.roomId}
                 </h2>
                 <p className="text-xs text-muted sm:text-sm">
@@ -74,6 +74,7 @@ function RoomPage({ roomState, socketRef, countdown }: Props) {
                         {me && !me.ready && (
                             <button
                                 type="button"
+                                data-testid="QA:ready"
                                 className="btn btn-primary btn-sm flex-1 sm:btn-md"
                                 onClick={() => socketRef.current?.ready()}
                             >
