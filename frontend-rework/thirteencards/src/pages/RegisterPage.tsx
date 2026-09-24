@@ -58,21 +58,24 @@ function RegisterPage({onGoLogin, onRegistered}: Props) {
                         >
                             <input
                                 className="input input-bordered w-full"
+                                data-testid="QA:register-username"
                                 {...register('username')} placeholder="Username" />
                             {errors.username && <p className="text-sm text-error">{errors.username.message}</p>}
                             <input
                                 className="input input-bordered w-full"
+                                data-testid="QA:register-email"
                                 {...register('email')} type="email" placeholder="Email" />
                             {errors.email && <p className="text-sm text-error">{errors.email.message}</p>}
                             <input
                                 className="input input-bordered w-full"
+                                data-testid="QA:register-password"
                                 {...register('password')} type="password" placeholder="Password" />
 
                             {errors.password && <p className="text-sm text-error">{errors.password.message}</p>}
 
 
                             {errors.root && <p className="text-sm text-error">{errors.root.message}</p>}
-                            <button className="btn btn-primary w-full" type="submit" disabled={isSubmitting}>
+                            <button data-testid="QA:register-submit" className="btn btn-primary w-full" type="submit" disabled={isSubmitting}>
                                 {isSubmitting ? 'Creating account…' : 'Register'}
                             </button>
 
