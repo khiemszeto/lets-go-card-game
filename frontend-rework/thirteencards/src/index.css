@@ -63,6 +63,13 @@ body {
             linear-gradient(180deg, #0d0804, #1a1208);
 }
 
+.player-name {
+    font-family: "Playwrite NG Modern", cursive;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+}
+
 .app-shell {
     display: flex;
     min-height: 100dvh;
@@ -74,7 +81,7 @@ body {
     min-height: 0;
 }
 
-/* In-game: lock the viewport so the table can fill the screen */
+/* In-game: lock the viewport so the table can fill the screen (desktop / tall viewports) */
 body:has(.game-shell) {
     overflow: hidden;
     height: 100dvh;
@@ -114,7 +121,7 @@ body:has(.game-shell) .site-header > div {
     --opp-card-h: calc(var(--opp-card-w) * 1.44);
     --side-col: 5.75rem;
     --fan-13: calc(var(--opp-card-w) * 4.84);
-    --top-seat-h: calc(var(--opp-card-h) + 1.75rem);
+    --top-seat-h: calc(var(--opp-card-h) + 2.75rem);
     --hand-slot: calc(var(--card-h) + 2.5rem);
     --play-inset-x: 0.15rem;
     --play-inset-y: 1rem;
@@ -248,13 +255,38 @@ body:has(.game-shell) .site-header > div {
     }
 }
 
-/* Room waiting: fit phone landscape without page scroll */
-@media (orientation: landscape) and (max-height: 540px) {
-    body:has(.room-shell) {
-        overflow: hidden;
-        height: 100dvh;
-    }
+/* Your-turn bells under table cards */
+.turn-bells {
+    display: inline-block;
+    margin-top: 5mm;
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    line-height: 1;
+    letter-spacing: 0.05em;
+    transform-origin: 50% 20%;
+    animation: bell-ring 0.7s ease-in-out infinite;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.35));
+    pointer-events: none;
+    user-select: none;
+}
 
+@keyframes bell-ring {
+    0%,
+    100% {
+        transform: translateY(0) rotate(-10deg) scale(1);
+    }
+    25% {
+        transform: translateY(-8%) rotate(12deg) scale(1.06);
+    }
+    50% {
+        transform: translateY(0) rotate(-8deg) scale(1);
+    }
+    75% {
+        transform: translateY(-10%) rotate(14deg) scale(1.08);
+    }
+}
+
+/* Room waiting: fit phone landscape */
+@media (orientation: landscape) and (max-height: 540px) {
     body:has(.room-shell) .app-shell {
         height: 100dvh;
         overflow: hidden;
@@ -366,13 +398,8 @@ body:has(.game-shell) .site-header > div {
     }
 }
 
-/* Game hall: phone landscape — no vertical page scroll; rooms scroll horizontally */
+/* Game hall: phone landscape — rooms scroll horizontally */
 @media (orientation: landscape) and (max-height: 540px) {
-    body:has(.hall-shell) {
-        overflow: hidden;
-        height: 100dvh;
-    }
-
     body:has(.hall-shell) .app-shell {
         height: 100dvh;
         overflow: hidden;
@@ -457,5 +484,32 @@ body:has(.game-shell) .site-header > div {
         min-height: 1.75rem;
         height: 1.75rem;
         margin-top: 0.35rem;
+    }
+}
+
+/*
+ * Phone landscape: allow a tiny document scroll so Safari can collapse the URL / tab bar.
+ * Keep .app-shell locked at 100dvh so the game UI itself does not bounce.
+ */
+@media (orientation: landscape) and (max-height: 540px) {
+    body:has(.landscape-play),
+    body:has(.game-shell),
+    body:has(.room-shell),
+    body:has(.hall-shell) {
+        overflow-x: hidden;
+        overflow-y: auto;
+        height: auto;
+        min-height: calc(100dvh + 1px);
+        -webkit-overflow-scrolling: touch;
+    }
+
+    body:has(.landscape-play) .app-shell,
+    body:has(.game-shell) .app-shell,
+    body:has(.room-shell) .app-shell,
+    body:has(.hall-shell) .app-shell {
+        height: 100dvh;
+        min-height: 100dvh;
+        max-height: 100dvh;
+        overflow: hidden;
     }
 }

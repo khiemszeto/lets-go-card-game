@@ -152,6 +152,12 @@ public class AuthPlayerService {
 
     }
 
+    public long getBalance(Long playerId) {
+        return playerRepository.findById(playerId)
+                .map(Player::getBalance)
+                .orElse(0L);
+    }
+
     private CreatePlayerResponseDto mapToDTO(Player playerResponse) {
         CreatePlayerResponseDto createPlayerResponseDto = new CreatePlayerResponseDto();
 

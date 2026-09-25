@@ -60,6 +60,7 @@ public class SecurityConfig {
                                         "/",
                                         "/index.html",
                                         "/assets/**",
+                                        "/favicon.ico",
                                         "/api/players",
                                         "/login",
                                         "/ws",

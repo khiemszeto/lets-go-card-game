@@ -19,13 +19,15 @@ function OpponentSeat({ player, side = 'top' }: Props) {
     const isSide = side === 'left' || side === 'right'
     const count = player?.numberOfCards ?? FULL_HAND
     const fanLength = fanLengthCss(player ? count : FULL_HAND)
+    // Full-hand slot so chip row stays put while cards shrink
+    const fullFanLength = fanLengthCss(FULL_HAND)
 
     if (!player) {
         if (isSide) {
             return (
                 <div
-                    className="w-[var(--side-col)] shrink-0"
-                    style={{ height: fanLength }}
+                    className="flex w-[var(--side-col)] shrink-0 flex-col items-center gap-1"
+                    style={{ height: `calc(${fullFanLength} + 2.75rem)` }}
                     aria-hidden
                 />
             )
@@ -53,17 +55,23 @@ function OpponentSeat({ player, side = 'top' }: Props) {
         </div>
     )
 
+    const chips = (
+        <p className="h-5 truncate text-center text-[clamp(0.75rem,1.8vw,0.95rem)] font-semibold leading-5 text-success">
+            {player.balance != null ? `${player.balance} chips` : '\u00a0'}
+        </p>
+    )
+
     return (
         <div
             className={[
-                'flex flex-col items-center gap-1.5',
+                'flex flex-col items-center gap-1',
                 isSide ? 'w-[var(--side-col)] max-w-[var(--side-col)]' : '',
             ].join(' ')}
         >
             <p
                 className={[
-                    'truncate text-center text-[length:clamp(0.6rem,1.4vw,0.75rem)] text-muted',
-                    isSide ? 'w-full' : 'max-w-36',
+                    'player-name truncate text-center text-[clamp(0.8rem,2vw,1.05rem)] text-muted',
+                    isSide ? 'w-full' : 'max-w-44',
                 ].join(' ')}
             >
                 {player.username}{' '}
@@ -72,10 +80,10 @@ function OpponentSeat({ player, side = 'top' }: Props) {
 
             {isSide ? (
                 <div
-                    className="relative"
+                    className="relative shrink-0"
                     style={{
                         width: 'var(--opp-card-h)',
-                        height: fanLength,
+                        height: fullFanLength,
                     }}
                 >
                     <div
@@ -89,8 +97,15 @@ function OpponentSeat({ player, side = 'top' }: Props) {
                     </div>
                 </div>
             ) : (
-                hand
+                <div
+                    className="flex shrink-0 justify-center"
+                    style={{ width: fullFanLength, minHeight: 'var(--opp-card-h)' }}
+                >
+                    {hand}
+                </div>
             )}
+
+            {chips}
         </div>
     )
 }

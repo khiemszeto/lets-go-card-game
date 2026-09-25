@@ -235,6 +235,7 @@ public class LobbyService {
             playerDto.setUsername(entry.getValue());
             playerDto.setReady(room.getWhoIsReady().contains(entry.getKey()));
             playerDto.setSeat(room.getSeatOrder().indexOf(entry.getKey()) + 1);
+            playerDto.setBalance(authPlayerService.getBalance(entry.getKey()));
 
             players.add(playerDto);
         }
@@ -287,6 +288,7 @@ public class LobbyService {
             roomPlayerDto.setPlayerId(playerId);
             roomPlayerDto.setNumberOfCards(hand.size());
             roomPlayerDto.setSeat(room.getSeatOrder().indexOf(playerId) + 1);
+            roomPlayerDto.setBalance(authPlayerService.getBalance(playerId));
             playersDto.add(roomPlayerDto);
         }
 
