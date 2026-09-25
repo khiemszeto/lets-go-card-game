@@ -263,6 +263,7 @@ public class GameService {
             dto.setSeat(room.getSeatOrder().indexOf(id) + 1);
             dto.setNumberOfCards(hand == null ? 0 : hand.size());
             dto.setReady(room.getWhoIsReady().contains(id));
+            dto.setBalance(authPlayerService.getBalance(id));
             players.add(dto);
         }
 

@@ -16,5 +16,21 @@ services:
       timeout: 5s
       retries: 10
 
+  app:
+    image: thirteencards:local
+    container_name: card-game-app
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: demo
+      JWT_SECRET: ${JWT_SECRET}
+      APP_COOKIE_SECURE: "false"
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/player_db
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ""
+
 volumes:
   db-data:

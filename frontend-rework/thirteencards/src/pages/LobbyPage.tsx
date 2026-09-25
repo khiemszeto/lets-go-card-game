@@ -148,6 +148,7 @@ function LobbyPage() {
                 }
 
                 if (isPlayResult(message)) {
+                    setError(null)
                     setGameState((prev) => {
                         if (!prev || prev.roomId !== message.roomId) return prev
                         return {
@@ -164,6 +165,7 @@ function LobbyPage() {
                 }
 
                 if (isPassResult(message)) {
+                    setError(null)
                     setGameState((prev) => {
                         if (!prev || prev.roomId !== message.roomId) return prev
                         return {
@@ -179,7 +181,21 @@ function LobbyPage() {
                 if (isGameOver(message)) {
                     setGameState((prev) => {
                         if (!prev || prev.roomId !== message.roomId) return prev
-                        return { ...prev, winnerId: message.winnerId,  endSeconds: 5}
+
+                        const balanceByName = new Map(
+                            (message.balances ?? []).map((b) => [b.playerName, b.newBalance]),
+                        )
+                        const players = prev.players.map((p) => {
+                            const next = balanceByName.get(p.username)
+                            return next == null ? p : { ...p, balance: next }
+                        })
+
+                        return {
+                            ...prev,
+                            players,
+                            winnerId: message.winnerId,
+                            endSeconds: 5,
+                        }
                     })
 
                     const myBalanceChange
@@ -283,14 +299,14 @@ function LobbyPage() {
                     : 'hall-root flex min-h-0 w-full flex-1 flex-col overflow-hidden px-2 py-1 sm:mx-auto sm:overflow-auto sm:px-6 sm:py-6'
             }
         >
-            {error && (
-                <div className={['alert alert-error mb-4', gameState ? 'mx-4 mt-2 shrink-0' : ''].join(' ')}>
+            {error && !gameState && (
+                <div className="alert alert-error mb-4">
                     <span>{error}</span>
                 </div>
             )}
 
-            {statusText && (
-                <div className={['alert alert-info mb-4', gameState ? 'mx-4 mt-2 shrink-0' : ''].join(' ')}>
+            {statusText && !gameState && (
+                <div className="alert alert-info mb-4">
                     <span>{statusText}</span>
                 </div>
             )}
@@ -301,6 +317,8 @@ function LobbyPage() {
                         gamestate={gameState}
                         socketRef={socketRef}
                         onChangeGame={setGameState}
+                        playError={error}
+                        onClearPlayError={() => setError(null)}
                     />
                 </div>
             ) : roomState ? (

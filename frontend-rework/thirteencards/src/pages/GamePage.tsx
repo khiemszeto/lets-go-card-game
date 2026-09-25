@@ -22,6 +22,8 @@ type Props = {
     gamestate: GameState
     socketRef: RefObject<GameSocket | null>
     onChangeGame: (gamestate: GameState) => void
+    playError?: string | null
+    onClearPlayError?: () => void
 }
 
 function LastPlayCards({ lastPlay }: { lastPlay: GameState['lastPlay'] }) {
@@ -34,7 +36,7 @@ function LastPlayCards({ lastPlay }: { lastPlay: GameState['lastPlay'] }) {
     ))
 }
 
-function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
+function GamePage({ gamestate, socketRef, onChangeGame, playError, onClearPlayError }: Props) {
     const [turnCountdown, setTurnCountDown] = useState<number | null> (null);
 
     const myHand = sortHand(gamestate.myHand)
@@ -42,7 +44,15 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
     const me = gamestate.players.find((p) => p.username === myUsername)
     const isMyTurn = me != null && me.playerId === gamestate.currentPlayerId
     const gameEnded = gamestate.winnerId != null
-    const TURN_DURATION = 15
+    const TURN_DURATION = 22
+
+    useEffect(() => {
+        if (!playError) return
+        const t = window.setTimeout(() => onClearPlayError?.(), 3000)
+        return () => window.clearTimeout(t)
+        // Restart timer only when the error text changes, not when parent re-renders.
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- onClearPlayError is unstable inline
+    }, [playError])
 
     function relativeSeat(player: RoomPlayer) {
         if (!me) return 0
@@ -157,16 +167,26 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
                 <div className="play-slot col-start-2 row-start-2 min-h-0 min-w-0 self-stretch">
                     <div className="play-area flex flex-col items-center justify-center gap-2 rounded-2xl bg-base-200 shadow-inner">
                         {isMyTurn && !gameEnded && (
-                            <p className="text-lg font-bold uppercase tracking-widest text-gold sm:text-2xl">
+                            <p className="mb-[5mm] text-lg font-bold uppercase tracking-widest text-gold sm:text-2xl">
                                 Your turn
                                 {turnCountdown != null && (
-                                    <span className="ml-2 font-semibold tabular-nums">{turnCountdown}s</span>
+                                    <span className="ml-2 font-semibold tabular-nums">{turnCountdown}</span>
                                 )}
                             </p>
                         )}
                         <div data-testid="QA:last-play" className="flex items-center justify-center gap-[clamp(0.25rem,0.8vw,0.5rem)]">
                             <LastPlayCards lastPlay={gamestate.lastPlay} />
                         </div>
+                        {isMyTurn && !gameEnded && (
+                            <div
+                                className="turn-bells"
+                                role="img"
+                                aria-label="Your turn"
+                                title="Your turn!"
+                            >
+                                🔔
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -217,9 +237,21 @@ function GamePage({ gamestate, socketRef, onChangeGame }: Props) {
                     </div>
                 </div>
 
-                <p className="flex items-center justify-center gap-2 text-[length:clamp(0.8rem,2vw,1.125rem)] font-bold">
-                    <span>{myUsername}</span>
-                </p>
+                <div className="relative flex w-full flex-col items-center">
+                    <p className="player-name flex items-center justify-center gap-2 text-[clamp(0.8rem,2vw,1.125rem)] font-bold">
+                        <span>{myUsername}</span>
+                    </p>
+                    <p
+                        className={[
+                            'flex h-7 max-w-[min(100%,28rem)] items-center justify-center px-2 text-center text-base font-bold tracking-wide text-error sm:text-lg',
+                            playError ? 'visible' : 'invisible',
+                        ].join(' ')}
+                        role="status"
+                        aria-live="polite"
+                    >
+                        {playError ?? '\u00a0'}
+                    </p>
+                </div>
             </div>
         </div>
     )

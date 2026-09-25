@@ -21,6 +21,7 @@ export interface RoomPlayer {
     numberOfCards: number;
     ready: boolean;
     seat: number;
+    balance?: number;
 }
 
 export interface ErrorMessage {

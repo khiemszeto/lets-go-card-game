@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend-rework/thirteencards/package-lock.json
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      - name: Build frontend
+        working-directory: frontend-rework/thirteencards
+        run: |
+          npm ci
+          npm run build
+
+      - name: Copy frontend into Spring static
+        run: |
+          rm -rf backend/src/main/resources/static/*
+          mkdir -p backend/src/main/resources/static
+          cp -r frontend-rework/thirteencards/dist/* backend/src/main/resources/static/
+
+      - name: Backend tests
+        working-directory: backend
+        run: |
+          export JWT_SECRET=$(openssl rand -base64 32)
+          ./mvnw -B test

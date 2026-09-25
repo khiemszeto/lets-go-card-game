@@ -1,11 +1,12 @@
 import type {LoginResponse, LoginRequest, RegisterRequest,RegisterResponse, MeResponse} from "../types/auth";
 
 async function readError(res: Response): Promise<string> {
+    const raw = await res.text()
     try {
-        const data = await res.json();
-        return data.message ?? 'Request failed';
-    }catch {
-        return (await res.text()) || 'Request failed'
+        const data = JSON.parse(raw) as { message?: string }
+        return data.message ?? 'Request failed'
+    } catch {
+        return raw || 'Request failed'
     }
 }
 

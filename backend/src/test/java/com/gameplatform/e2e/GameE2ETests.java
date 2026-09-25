@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.gameplatform.e2e.pages.GamePage;
 import com.gameplatform.e2e.pages.RoomPage;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
 // Needs APP_DECK_SHUFFLE=false. One player gets all spades, the other all clubs. 3 of spades leads.
+@Order(2)
 class GameE2ETests extends BaseE2E {
 
     @Test

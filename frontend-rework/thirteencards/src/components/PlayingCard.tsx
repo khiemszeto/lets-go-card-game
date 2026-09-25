@@ -22,10 +22,11 @@ function PlayingCard({ card, isSelected, onClick, disabled }: Props) {
             className={[
                 'relative shrink-0 rounded-lg border-2 bg-white shadow',
                 'h-[var(--card-h,92px)] w-[var(--card-w,4rem)]',
-                'transition-transform hover:-translate-y-[8%]',
+                'transition-transform',
+                !disabled && 'hover:-translate-y-[8%]',
                 red ? 'text-red-600' : 'text-neutral-900',
                 isSelected ? '-translate-y-[14%] border-amber-400 shadow-lg' : 'border-black/10',
-                disabled ? 'cursor-default opacity-80' : 'cursor-pointer',
+                disabled ? 'cursor-default' : 'cursor-pointer',
             ].join(' ')}
         >
             <span className="absolute left-[8%] top-[6%] text-center font-bold leading-none [font-size:max(0.45rem,calc(var(--card-w,4rem)*0.22))]">

@@ -11,4 +11,5 @@ public class RoomPlayerDto {
     private int numberOfCards;
     private boolean ready;
     private int seat;
+    private Long balance;
 }

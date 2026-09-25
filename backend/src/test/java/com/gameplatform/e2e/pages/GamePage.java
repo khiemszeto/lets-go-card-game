@@ -49,6 +49,10 @@ public class GamePage extends BasePage {
         click(qa("pass"));
     }
 
+    public boolean isPassButtonEnabled() {
+        return driver.findElement(qa("pass")).isEnabled();
+    }
+
     // Pass is enabled only on your turn
     public GamePage waitForMyTurn() {
         wait.until(d -> d.findElement(qa("pass")).isEnabled());

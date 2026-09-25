@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.gameplatform.e2e.pages.GamePage;
 import com.gameplatform.e2e.pages.RoomPage;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 
 // Needs APP_DECK_SHUFFLE=false
 // Spades player plays 3..A as a straight, clubs player passes, 2 of spades wins.
+@Order(3)
 class FullGameE2ETests extends BaseE2E {
 
     @Test

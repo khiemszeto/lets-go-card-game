@@ -4,7 +4,7 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-username: string;
+    username: string;
   balance: number;
 }
 
