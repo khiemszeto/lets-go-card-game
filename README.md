@@ -53,11 +53,12 @@ Frontend edits hot-reload instantly. Backend edits trigger a DevTools restart
 
 ## Secrets (do not commit)
 
-- `JWT_SECRET` — required at runtime (Lightsail systemd / local export)
-- `APP_COOKIE_SECURE=true` on HTTPS demos
-- Never put real secrets in `application.properties`; use env or gitignored `application-local.properties`
+- `JWT_SECRET` — required at runtime (local export, or `.env` for Docker)
+- `APP_COOKIE_SECURE=true` on HTTPS (Lightsail). Local HTTP can stay `false`
+- Never put real secrets in `application.properties` or git; use env / gitignored `.env` / `application-local.properties`
+- Copy `env.example` → `.env` for Compose. Do not commit `.env`
 
-If a secret was ever committed, rotate it on the server and treat the old value as burned.
+If a secret was ever committed or pasted into a chat, rotate it on the server and treat the old value as burned.
 
 ---
 
@@ -98,3 +99,58 @@ export JWT_SECRET='...'
 export SPRING_PROFILES_ACTIVE=demo
 java -jar target/backend-0.0.1-SNAPSHOT.jar
 ```
+
+The `Dockerfile` does the same steps (frontend build → static → JAR) inside the image.
+
+---
+
+## Docker (local)
+
+```bash
+cp env.example .env
+# set JWT_SECRET (openssl rand -base64 32)
+docker compose up -d --build
+```
+
+App: `http://127.0.0.1:8080`. MySQL stays on `127.0.0.1:3306`.  
+`APP_COOKIE_SECURE` defaults to `false` when unset (see `docker-compose.yml`).
+
+---
+
+## CI / CD
+
+| Workflow | When | What |
+|---|---|---|
+| CI | pull request, and push to `main` | frontend build + backend unit/integration tests (E2E excluded) |
+| Deploy | CI on `main` finishes **successfully** | build image → push GHCR → SSH Lightsail `compose pull` + `up` |
+
+Merge to `main` does not deploy if CI fails.
+
+Lightsail `.env` (not in git) should include `JWT_SECRET`, `APP_COOKIE_SECURE=true`, `APP_IMAGE=ghcr.io/khiemszeto/thirteencards:latest`, and `COMPOSE_PROJECT_NAME=app` so Compose keeps the existing MySQL volume `app_db-data`.
+
+Manual update on the server if CD is down:
+
+```bash
+cd ~/lets-go-card-game
+git pull origin main
+docker compose pull app
+docker compose up -d app
+```
+
+Do not run `docker compose down -v` — that deletes database volumes.
+
+---
+
+## Rollback (Lightsail)
+
+Images are tagged `latest` and the git commit SHA.
+
+```bash
+cd ~/lets-go-card-game
+# point at a previous Actions SHA (full sha from the green deploy)
+# edit .env: APP_IMAGE=ghcr.io/khiemszeto/thirteencards:<sha>
+docker compose pull app
+docker compose up -d app
+```
+
+Or revert the bad commit on `main` and let CI + Deploy publish a new `latest`.
