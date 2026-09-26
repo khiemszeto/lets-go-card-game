@@ -1,18 +1,22 @@
 name: deploy.yml
 
 on:
-  push:
-    branches:
-      - main
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
 
 jobs:
   deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
 
       - name: Login to GHCR
         uses: docker/login-action@v3
@@ -28,7 +32,7 @@ jobs:
           push: true
           tags: |
             ghcr.io/khiemszeto/thirteencards:latest
-            ghcr.io/khiemszeto/thirteencards:${{ github.sha }}
+            ghcr.io/khiemszeto/thirteencards:${{ github.event.workflow_run.head_sha }}
 
       - name: Deploy on Lightsail
         uses: appleboy/ssh-action@v1.2.0
