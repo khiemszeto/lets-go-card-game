@@ -18,7 +18,7 @@ services:
 
   app:
     build: .
-    image: thirteencards:local
+    image: ${APP_IMAGE:-thirteencards:local}
     container_name: card-game-app
     depends_on:
       db:
