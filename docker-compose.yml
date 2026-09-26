@@ -17,6 +17,7 @@ services:
       retries: 10
 
   app:
+    build: .
     image: thirteencards:local
     container_name: card-game-app
     depends_on:
@@ -27,7 +28,7 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: demo
       JWT_SECRET: ${JWT_SECRET}
-      APP_COOKIE_SECURE: "false"
+      APP_COOKIE_SECURE: ${APP_COOKIE_SECURE:-false}
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/player_db
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ""
